@@ -1,91 +1,17 @@
-Texture :: struct {}
+#load "src/Assets.jai";
+#load "src/Animation.jai";
+#load "src/Entity.jai";
+#load "src/Enemy.jai";
+#load "src/Projectile.jai";
+#load "src/Pickup.jai";
+#load "src/Util.jai";
 
-Sprite :: enum {
-    PLAYER;
-    VAMPIRE;
-    GOBLIN;
-    BULLET;
-    EXPERIENCE_ORB;
-    GOLD_PIECE;
-    GOLD_PILE;
-}
-
-Entity :: struct {
-    is_dead:  bool;
-    position: Vector2;
-    velocity: Vector2;
-    radius:   float;
-    sprite:   Sprite;
-    //position_intended: Vector2;
-}
-
-// if the two Entities collide, returns true and position of collision
-will_collide :: (a: *$A/Entity, b: *$B/Entity) -> bool, Vector2 {
-    //TODO:
-    // - return position of collision
-    // - take position_intended of entities into account (swept collision)
-    radii_sum := a.radius + b.radius;
-    return distance_squared(a.position, b.position) <= radii_sum * radii_sum, .{};
-}
-
-//TODO
-/*determine_position_intended :: (using entity: *$T/Entity, dt: float) {
-    position_intended = velocity * dt;
-}*/
-
-move :: (using entity: *$T/Entity, dt: float) {
-    //TODO
-    //if !is_dead then position = position_intended;
-    if !is_dead then position += velocity * dt;
-}
+#load "design.jai";
 
 
 
 
-
-Animation :: struct {
-    is_looping:        bool;
-    frames: [..]       Sprite;
-    frames_per_second: float;
-}
-
-Animator :: struct {
-    animation:     *Animation;
-    frame:         int;
-    partial_frame: float;
-}
-
-Animated_Entity :: struct {
-    base:     Entity;
-    animator: Animator;
-}
-
-animate :: (using entity: *$T/interface Animated_Entity, dt: float) {
-    using animator;
-    if !animation then return;
-    partial_frame += animation.frames_per_second * dt;
-    if partial_frame >= 1.0 {
-        partial_frame -= 1.0;
-        frame += 1;
-        if frame == animation.frames.count then frame = ifx animation.is_looping then 0 else frame + 1;
-    }
-    sprite = animation.frames[frame];
-}
-
-begin_animation :: (using entity: *$T/interface Animated_Entity, animation: *Animation) {
-    animator = .{ animation = animation };
-}
-
-is_done_animating :: (using entity: *$T/interface Animated_Entity) -> bool {
-    using animator;
-    return !animation || (!animation.is_looping && frame == animation.count-1);
-}
-
-move_and_animate :: inline (entity: *$T/interface Animated_Entity, dt: float) {
-    if entity.is_dead then return;
-    move(entity, dt);
-    animate(entity, dt);
-}
+SECONDS_TO_SIMULATE :: 30;
 
 
 
@@ -93,109 +19,35 @@ move_and_animate :: inline (entity: *$T/interface Animated_Entity, dt: float) {
 Character :: struct {
     health:     int;
     health_max: int;
-}
-
-
-
-
-Enemy :: struct {
-    MAXIMUM :: 10_000;
-
-    using #as base:      Entity;
-    using #as character: Character;
-
-    animator: Animator;
-    speed: float;
-}
-
-spawn :: (enemy: Enemy, position: Vector2) {
-    using state;
-
-    assert(enemies.count < Enemy.MAXIMUM);
-
-    new_enemy := array_add(*enemies);
-    new_enemy.* = enemy;
-
-    new_enemy.position   = position;
-    new_enemy.health_max = new_enemy.health;
-}
-
-ENEMY_VAMPIRE :: Enemy.{
-    radius = 16,
-    speed  = 3,
-    health = 10
-};
-
-ENEMY_GOBLIN :: Enemy.{
-    radius = 8,
-    speed  = 5,
-    health = 4
-};
-
-
-
-
-Projectile :: struct {
-    MAXIMUM :: 10_000;
-
-    using #as base: Entity;
-
-    damage: int;
-}
-
-spawn :: (projectile: Projectile, position: Vector2, velocity: Vector2) {
-    using state;
-
-    assert(projectiles.count < Projectile.MAXIMUM);
-
-    new_projectile := array_add(*projectiles);
-    new_projectile.* = projectile;
-
-    new_projectile.position = position;
-    new_projectile.velocity = velocity;
-}
-
-PROJECTILE_BULLET :: Projectile.{
-    radius = 4
-};
-
-
-
-
-Pickup :: struct {
-    MAXIMUM :: 10_000;
-
-    using #as base: Entity;
-
-    kind: enum { EXPERIENCE; GOLD; }
+    speed:      float;
 }
 
 
 
 
 state: struct {
-    enemies:     [..] Enemy;
-    projectiles: [..] Projectile;
+    enemies:     Entities(Enemy,           Enemy.MAXIMUM);
+    projectiles: Entities(Projectile, Projectile.MAXIMUM);
+    pickups:     Entities(Pickup,         Pickup.MAXIMUM);
 
     player: struct {
-        using #as base:      Entity;
-        using #as character: Character;
+        using #as base:      Entity    = PLAYER_ENTITY;
+        using #as character: Character = PLAYER_CHARACTER;
+
+        pickup_radius: float = 24;
+
+        gold:          int;
+        experience:    int;
     }
 
     camera: struct {
         position: Vector2;
     }
 
-    time: float;
-
+    frames:     int;
+    time:       float;
+    is_paused:  bool;
     is_exiting: bool;
-}
-
-
-
-
-assets: struct {
-    textures: [#run type_info(Sprite).values.count] Texture;
 }
 
 
@@ -204,69 +56,124 @@ assets: struct {
 init :: () {
     using state;
 
-    array_reserve(*enemies,     Enemy.MAXIMUM);
-    array_reserve(*projectiles, Projectile.MAXIMUM);
+    player.health_max = player.health;
 
-    INITIAL_WAVE_COUNT    :: 10;
-    INITIAL_WAVE_DISTANCE :: 100;
-    for 0..INITIAL_WAVE_COUNT-1 {
-        theta := TAU / INITIAL_WAVE_COUNT * it;
-        spawn(ENEMY_VAMPIRE, .{-cos(theta) * INITIAL_WAVE_DISTANCE, sin(theta) * INITIAL_WAVE_DISTANCE});
-    }
-
-    player.radius = 16;
-    player.health, player.health_max = 100;
+    //spawn_in_circle_around_player(ENEMY_VAMPIRE, 10, 100.0);
+    spawn(ENEMY_VAMPIRE, .{-100, 0});
+    spawn(PICKUP_COIN, .{ 10, 0 });
 }
 
 simulate :: (dt: float) {
     using state;
 
-    time += dt;
-
-    // spawn waves if needed
-
-    // determine enemy behavior
 
     // handle player input
+    //TODO
+
+
+    // return if paused, otherwise increment time
+    if is_paused then return;
+    time += dt;
+    if time >= SECONDS_TO_SIMULATE then is_exiting = true;
+
+
+    // fire player weapons if needed
+    //TODO
+
+
+    // spawn waves if needed
+    //TODO
+
+
+    // determine enemy behavior
+    for * enemies {
+        toward_player := player.position - it.position;
+        normalize(*toward_player);
+        it.velocity = toward_player * it.speed;
+    }
+
+
+    // determine entity movement
+    for * enemies     determine_intended_movement(it,      dt);
+    for * projectiles determine_intended_movement(it,      dt);
+    for * pickups     determine_intended_movement(it,      dt);
+                      determine_intended_movement(*player, dt);
+
 
     // check for collisions
-    for * projectile, projectile_index: projectiles {
-        if projectile.is_dead continue; // might not be needed?
-        for * enemy, enemy_index: enemies {
-            if enemy.is_dead then continue;
-            they_will_collide, collision_position := will_collide(projectile, enemy);
+
+    // player -> pickups
+    for * pickup: pickups {
+        will_be_picked_up, _ := will_collide(player, pickup, player.pickup_radius);
+        if will_be_picked_up then pick_up(pickup);
+    }
+
+    // projectiles -> enemies
+    for * projectile: projectiles {
+        for * enemy: enemies {
+            they_will_collide, _ := will_collide(projectile, enemy);
             if they_will_collide {
-                projectile.is_dead = true;
+                despawn(projectile);
                 enemy.health = max(enemy.health - projectile.damage, 0);
-                if enemy.health == 0 then enemy.is_dead = true;
+                if enemy.health == 0 then kill(enemy);
                 //continue projectile;
             }
         }
     }
 
-    // move and animate everything
-    for * enemies     move_and_animate(it, dt);
-    for * projectiles move(it, dt);
-    player.position += player.velocity;
+    // enemies -> player
+    for enemy: enemies {
+        will_collide_with_player, _ := will_collide(enemy, player);
+        if will_collide_with_player {
+            log("ow");
+            player.health -= enemy.damage;
+        }
+    }
 
-    // remove anything that is_dead
-    for enemies     if it.is_dead then remove it;
-    for projectiles if it.is_dead then remove it;
+
+    // move and animate everything
+    for * enemies     move(it);
+    for * projectiles move(it);
+    for * pickups     move(it);
+                      move(*player);
+
+
+    // end the game if the player dies
+    if player.health <= 0 {
+        log("player died % seconds in on frame %", time, frames);
+        is_exiting = true;
+    }
+
+
+    cleanup(*enemies);
+    cleanup(*projectiles);
+    cleanup(*pickups);
+
+    if enemies.count > 0 && frames % 10 == 0 then log("frame %: enemy0 is at %", frames, enemies[0].position);
+
+    frames += 1;
 }
 
 render :: () {
-    // render enemies
-    // render player
-    // render projectiles
+    using state;
+
+    for pickups     render(it);
+    for enemies     render(it);
+                    render(player);
+    for projectiles render(it);
 }
 
 
 
 
 main :: () {
+    load_assets();
+
     init();
 
-    while (!state.is_exiting) { simulate(1.0 / 60.0); render(); }
+    using state;
+
+    while (!is_exiting) { simulate(1.0 / 60.0); render(); }
 }
 
 
