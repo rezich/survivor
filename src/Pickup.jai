@@ -1,13 +1,21 @@
 Pickup :: struct {
     using #as base: Entity;
 
-    is_following_player: bool;
+    status: enum { IDLE; SWOOPING; FOLLOWING_PLAYER; };
+
+    swoop_target: Vector2;
 
     experience: int;
     gold:       int;
 
     MAXIMUM :: 10_000;
     SPEED   :: 100;
+
+    VIBRATION_RANGE     :: 32;
+    VIBRATION_INTENSITY :: 0.18;
+
+    SWOOP_DISTANCE :: 32;
+    SWOOP_SPEED    :: 10;
 }
 
 spawn :: (pickup: Pickup, position: Vector2) -> *Pickup {
@@ -24,8 +32,6 @@ pick_up :: (using pickup: *Pickup) {
 
     player.gold       += gold;
     player.experience += experience;
-
-    log("ding");
 
     despawn(pickup);
 }

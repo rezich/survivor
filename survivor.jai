@@ -97,6 +97,7 @@ init :: () {
 
     spawn_in_circle_around_player(ENEMY_VAMPIRE, 10, 200.0);
     spawn_in_circle_around_player(ENEMY_GOBLIN,  20, 300.0);
+    //spawn(PICKUP_COIN, .{ 200, 0 });
 }
 
 handle_input :: () {
@@ -132,7 +133,6 @@ simulate :: (dt: float) {
 
 
     // fire player weapons if needed
-    //TODO
     if time.game >= player.next_shot_time {
         for 0..player.PROJECTILES_PER_SHOT-1 {
             theta := TAU / player.PROJECTILES_PER_SHOT * it;
@@ -165,11 +165,28 @@ simulate :: (dt: float) {
 
     // determine pickup behavior
     for * pickups {
-        if !it.is_following_player then continue;
+        it.vibration = 0;
 
-        toward_player := player.position - it.position;
-        normalize(*toward_player);
-        it.velocity = toward_player * Pickup.SPEED;
+        if #complete it.status == {
+            case .IDLE;
+                distance_to_player := distance(it.position, player.position);
+                vibration_begin_distance := player.pickup_radius + Pickup.VIBRATION_RANGE;
+                if distance_to_player < vibration_begin_distance {
+                    it.vibration = (Pickup.VIBRATION_RANGE - (distance_to_player - player.pickup_radius)) * Pickup.VIBRATION_INTENSITY;
+                }
+            case .SWOOPING;
+                distance_to_swoop_target := distance(it.position, it.swoop_target);
+                if is_approximately_zero(distance_to_swoop_target, 1) then it.status = .FOLLOWING_PLAYER;
+                else {
+                    toward_swoop_target := it.swoop_target - it.position;
+                    normalize(*toward_swoop_target);
+                    it.velocity = toward_swoop_target * (distance_to_swoop_target * Pickup.SWOOP_SPEED);
+                }
+            case .FOLLOWING_PLAYER;
+                toward_player := player.position - it.position;
+                normalize(*toward_player);
+                it.velocity = toward_player * Pickup.SPEED;
+        }
     }
 
 
@@ -184,8 +201,15 @@ simulate :: (dt: float) {
 
     // player -> pickups
     for * pickup: pickups {
-        will_be_magnetized, _ := will_collide(player, pickup, player.pickup_radius);
-        if will_be_magnetized then pickup.is_following_player = true;
+        if pickup.status == .IDLE {
+            will_be_magnetized, _ := will_collide(player, pickup, player.pickup_radius);
+            if will_be_magnetized {
+                pickup.status = .SWOOPING;
+                away_from_player := pickup.position - player.position;
+                normalize(*away_from_player);
+                pickup.swoop_target = pickup.position + away_from_player * Pickup.SWOOP_DISTANCE;
+            }
+        }
 
         will_be_picked_up, _ := will_collide(player, pickup);
         if will_be_picked_up  then pick_up(pickup);
@@ -278,6 +302,8 @@ main :: () {
 
 #import "Basic";
 #import "Math";
+#import "Sloppy_Math";
+#import "Random";
 #import "Window_Creation";
 #import "System";  // For get_path_of_running_executable. @Cleanup.
 #import "String";  // For path_strip_filename. @Cleanup.

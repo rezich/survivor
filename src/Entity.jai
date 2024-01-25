@@ -1,10 +1,11 @@
 Entity :: struct {
-    is_dead:  bool;
-    position: Vector2;
-    velocity: Vector2;
-    radius:   float;
-    sprite:   Sprite;
-    position_intended: Vector2;
+    is_dead:   bool;
+    position:  Vector2;
+    velocity:  Vector2;
+    radius:    float;
+    sprite:    Sprite;
+    vibration: float;
+    //position_intended: Vector2;
 }
 
 // if the two Entities collide, returns true and position of collision
@@ -24,11 +25,21 @@ move :: inline(using entity: *Entity, dt: float) {
 
 render :: (using entity: Entity) {
     using state;
-    pos := to_screen_space(position);
+
+    vibration_vector: Vector2;
+    if vibration {
+        theta  := random_get_within_range(0, TAU);
+        amount := random_get_within_range(0, vibration);
+        vibration_vector = .{ -cos(theta) * amount, sin(theta) * amount };
+    }
+
+    pos := to_screen_space(position + vibration_vector);
     p0 := pos - Vector2.{radius, radius};
     p1 := pos + Vector2.{radius, radius};
 
-    color: Vector4;
+    color := Vector4.{1,1,1,1};
+
+    // temporary sprite-based coloring until we get asset loading in
     if #complete sprite == {
         case .PLAYER;         color = .{ 0, 1, 0,1};
         case .VAMPIRE;        color = .{ 1, 0, 0,1};
