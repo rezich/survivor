@@ -17,8 +17,6 @@ spawn :: (pickup: Pickup, position: Vector2) {
 pick_up :: (using pickup: *Pickup) {
     using state;
 
-    log("ding");
-
     player.gold       += gold;
     player.experience += experience;
 

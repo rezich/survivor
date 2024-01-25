@@ -10,6 +10,22 @@
 
 
 
+BUILD : enum { DEBUG; RELEASE; } : .DEBUG;
+
+
+
+/*
+
+TODO:
+  - despawn projectiles that go off-screen
+  - add weapon system
+  - add wave system
+  - add HUD
+
+*/
+
+
+
 
 window: struct {
     handle: Window_Type;
@@ -40,6 +56,11 @@ state: struct {
 
         pickup_radius: float = 24;
 
+        next_shot_time: float;
+        TIME_BETWEEN_SHOTS   :: 1.0;
+        PROJECTILES_PER_SHOT :: 8;
+        PROJECTILE_SPEED     :: 40;
+
         gold:          int;
         experience:    int;
     }
@@ -53,8 +74,12 @@ state: struct {
         position: Vector2;
     }
 
+    time: struct {
+        real: Apollo_Time;
+        game: float;
+    }
+
     frames:     int;
-    time:       Apollo_Time;
     is_paused:  bool;
     is_exiting: bool;
 }
@@ -65,7 +90,7 @@ state: struct {
 init :: () {
     using state;
 
-    time = current_time_monotonic();
+    time.real = current_time_monotonic();
 
     player.health_max = player.health;
 
@@ -100,12 +125,21 @@ handle_input :: () {
 simulate :: (dt: float) {
     using state;
 
-    // skip if paused
+    // skip if paused, otherwise update game time
     if is_paused then return;
+    time.game += dt;
 
 
     // fire player weapons if needed
     //TODO
+    if time.game >= player.next_shot_time {
+        for 0..player.PROJECTILES_PER_SHOT-1 {
+            theta := TAU / player.PROJECTILES_PER_SHOT * it;
+            offset := Vector2.{ -cos(theta), sin(theta) };
+            spawn(PROJECTILE_BULLET, player.position + offset * player.radius, offset * player.PROJECTILE_SPEED);
+        }
+        player.next_shot_time = time.game + player.TIME_BETWEEN_SHOTS;
+    }
 
 
     // spawn waves if needed
@@ -160,7 +194,6 @@ simulate :: (dt: float) {
     for enemy: enemies {
         will_collide_with_player, _ := will_collide(enemy, player);
         if will_collide_with_player {
-            log("ow");
             player.health -= enemy.damage;
         }
     }
@@ -220,15 +253,15 @@ main :: () {
     using state;
 
     while (!is_exiting) {
-        prev_time := time;
-        time = current_time_monotonic();
-        dt := cast(float) to_float64_seconds(time - prev_time);
+        prev_time := time.real;
+        time.real = current_time_monotonic();
+        dt := cast(float) to_float64_seconds(time.real - prev_time);
 
         handle_input();
         simulate(dt);
         render();
 
-        sleep_milliseconds(10);
+        sleep_milliseconds(10); //TODO: an actual frame controller
         reset_temporary_storage();
     }
 }
@@ -245,9 +278,11 @@ main :: () {
 Simp  :: #import "Simp";
 Input :: #import "Input";
 
-/*#run {
-    #if OS == .WINDOWS {
-        WR :: #import "Windows_Resources";
-        WR.disable_runtime_console();
-    }
-}*/
+
+
+
+// hide console in release builds
+#if BUILD == .DEBUG then #run #if OS == .WINDOWS {
+    WR :: #import "Windows_Resources";
+    WR.disable_runtime_console();
+}
