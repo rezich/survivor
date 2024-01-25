@@ -21,6 +21,7 @@ TODO:
   - add weapon system
   - add wave system
   - add HUD
+  - put any thought at all into the framerate controller
 
 */
 
@@ -54,12 +55,12 @@ state: struct {
         using #as base:      Entity    = PLAYER_ENTITY;
         using #as character: Character = PLAYER_CHARACTER;
 
-        pickup_radius: float = 24;
+        pickup_radius: float = 48;
 
         next_shot_time: float;
         TIME_BETWEEN_SHOTS   :: 1.0;
         PROJECTILES_PER_SHOT :: 8;
-        PROJECTILE_SPEED     :: 40;
+        PROJECTILE_SPEED     :: 400;
 
         gold:          int;
         experience:    int;
@@ -96,7 +97,6 @@ init :: () {
 
     spawn_in_circle_around_player(ENEMY_VAMPIRE, 10, 200.0);
     spawn_in_circle_around_player(ENEMY_GOBLIN,  20, 300.0);
-    //spawn(PICKUP_COIN, .{ 10, 0 });
 }
 
 handle_input :: () {
@@ -118,6 +118,7 @@ handle_input :: () {
             case .KEYBOARD;
                 if it.key_pressed && it.key_code == .ESCAPE then is_paused = !is_paused;
                 if it.key_code == .MOUSE_BUTTON_LEFT then input.is_player_intentionally_moving = xx it.key_pressed;
+                if it.key_pressed && it.key_code == .SPACEBAR then for pickups log("% %", it_index, it.position);
         }
     }
 }
@@ -162,19 +163,32 @@ simulate :: (dt: float) {
     }
 
 
-    // determine entity movement
-    for * enemies     determine_intended_movement(it,      dt);
-    for * projectiles determine_intended_movement(it,      dt);
-    for * pickups     determine_intended_movement(it,      dt);
-                      determine_intended_movement(*player, dt);
+    // determine pickup behavior
+    for * pickups {
+        if !it.is_following_player then continue;
+
+        toward_player := player.position - it.position;
+        normalize(*toward_player);
+        it.velocity = toward_player * Pickup.SPEED;
+    }
+
+
+    // move entities
+    for * enemies     move(it,      dt);
+    for * projectiles move(it,      dt);
+    for * pickups     move(it,      dt);
+                      move(*player, dt);
 
 
     // check for collisions
 
     // player -> pickups
     for * pickup: pickups {
-        will_be_picked_up, _ := will_collide(player, pickup, player.pickup_radius);
-        if will_be_picked_up then pick_up(pickup);
+        will_be_magnetized, _ := will_collide(player, pickup, player.pickup_radius);
+        if will_be_magnetized then pickup.is_following_player = true;
+
+        will_be_picked_up, _ := will_collide(player, pickup);
+        if will_be_picked_up  then pick_up(pickup);
     }
 
     // projectiles -> enemies
@@ -197,13 +211,6 @@ simulate :: (dt: float) {
             player.health -= enemy.damage;
         }
     }
-
-
-    // move and animate everything
-    for * enemies     move(it);
-    for * projectiles move(it);
-    for * pickups     move(it);
-                      move(*player);
 
 
     // end the game if the player dies
@@ -282,7 +289,7 @@ Input :: #import "Input";
 
 
 // hide console in release builds
-#if BUILD == .DEBUG then #run #if OS == .WINDOWS {
+#if BUILD != .DEBUG then #run #if OS == .WINDOWS {
     WR :: #import "Windows_Resources";
     WR.disable_runtime_console();
 }

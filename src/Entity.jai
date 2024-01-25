@@ -9,16 +9,17 @@ Entity :: struct {
 
 // if the two Entities collide, returns true and position of collision
 will_collide :: (a: Entity, b: Entity, a_radius_override := 0.0) -> bool, Vector2 {
-    circles_collide, collision_point := do_moving_circles_collide(a.position, a.position_intended, ifx a_radius_override else a.radius, b.position, b.position_intended, b.radius);
+    //circles_collide, collision_point := do_moving_circles_collide(a.position, a.position_intended, ifx a_radius_override else a.radius, b.position, b.position_intended, b.radius);
+    circles_collide, collision_point := do_circles_overlap(a.position, ifx a_radius_override else a.radius, b.position, b.radius);
     return circles_collide, collision_point;
 }
 
-determine_intended_movement :: inline (using entity: *Entity, dt: float) {
+/*determine_intended_movement :: inline (using entity: *Entity, dt: float) {
     position_intended = position + velocity * dt;
-}
+}*/
 
-move :: inline(using entity: *Entity) {
-    position = position_intended;
+move :: inline(using entity: *Entity, dt: float) {
+    position += velocity * dt;
 }
 
 render :: (using entity: Entity) {

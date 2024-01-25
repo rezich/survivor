@@ -53,3 +53,13 @@ do_moving_circles_collide :: (a_begin: Vector2, a_end: Vector2, a_radius: float,
 
 to_screen_space :: (position) => position + state.camera.position + Vector2.{xx window.width, xx window.height} / 2;
 to_world_space  :: (position) => position - state.camera.position - Vector2.{xx window.width, xx window.height} / 2;
+
+lerp_theta :: (a: float, b: float, t: float) -> float {
+    t2 := b-a;
+    dt := clamp(t2-floor(t2/TAU) * TAU, 0, TAU);
+    return lerp(a, a + (ifx dt > PI then dt-TAU else dt), t);
+}
+
+atan2_between :: (a, b) => atan2(a.y-b.y, a.x-b.x);
+
+easy_ease :: (x, target, speed) => x + (target - x) * speed;

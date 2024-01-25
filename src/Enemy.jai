@@ -8,12 +8,14 @@ Enemy :: struct {
     MAXIMUM :: 10_000;
 }
 
-spawn :: (enemy: Enemy, position: Vector2) {
+spawn :: (enemy: Enemy, position: Vector2) -> *Enemy {
     using state;
 
     new_enemy := spawn(*enemies, enemy);
     new_enemy.position   = position;
     new_enemy.health_max = new_enemy.health;
+
+    return new_enemy;
 }
 
 spawn_in_circle_around_player :: (enemy: Enemy, count: int, distance: float) {
