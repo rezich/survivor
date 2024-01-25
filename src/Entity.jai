@@ -22,7 +22,23 @@ move :: inline(using entity: *Entity) {
 }
 
 render :: (using entity: Entity) {
-    //TODO: draw sprite
+    using state;
+    pos := position + camera.position + Vector2.{xx window.width, xx window.height} / 2;
+    p0 := pos - Vector2.{radius, radius};
+    p1 := pos + Vector2.{radius, radius};
+
+    color: Vector4;
+    if #complete sprite == {
+        case .PLAYER;         color = .{ 0, 1, 0,1};
+        case .VAMPIRE;        color = .{ 1, 0, 0,1};
+        case .GOBLIN;         color = .{.5, 0, 0,1};
+        case .BULLET;         color = .{ 1, 0, 1,1};
+        case .EXPERIENCE_ORB; color = .{ 0, 1, 1,1};
+        case .COIN;           color = .{ 1, 1, 0,1};
+        case .COIN_PILE;      color = .{.5,.5, 0,1};
+    }
+
+    Simp.immediate_quad(p0.x, p0.y, p1.x, p1.y, color);
 }
 
 despawn :: inline (entity: *Entity) {

@@ -16,6 +16,15 @@ SECONDS_TO_SIMULATE :: 30;
 
 
 
+window: struct {
+    handle: Window_Type;
+    width  := 1280;
+    height := 720;
+}
+
+
+
+
 Character :: struct {
     health:     int;
     health_max: int;
@@ -45,7 +54,7 @@ state: struct {
     }
 
     frames:     int;
-    time:       float;
+    time:       Apollo_Time;
     is_paused:  bool;
     is_exiting: bool;
 }
@@ -56,11 +65,13 @@ state: struct {
 init :: () {
     using state;
 
+    time = current_time_monotonic();
+
     player.health_max = player.health;
 
-    //spawn_in_circle_around_player(ENEMY_VAMPIRE, 10, 100.0);
-    spawn(ENEMY_VAMPIRE, .{-100, 0});
-    spawn(PICKUP_COIN, .{ 10, 0 });
+    spawn_in_circle_around_player(ENEMY_VAMPIRE, 10, 100.0);
+    spawn_in_circle_around_player(ENEMY_GOBLIN,  20, 200.0);
+    //spawn(PICKUP_COIN, .{ 10, 0 });
 }
 
 simulate :: (dt: float) {
@@ -73,8 +84,6 @@ simulate :: (dt: float) {
 
     // return if paused, otherwise increment time
     if is_paused then return;
-    time += dt;
-    if time >= SECONDS_TO_SIMULATE then is_exiting = true;
 
 
     // fire player weapons if needed
@@ -139,41 +148,68 @@ simulate :: (dt: float) {
 
 
     // end the game if the player dies
-    if player.health <= 0 {
-        log("player died % seconds in on frame %", time, frames);
-        is_exiting = true;
-    }
+    if player.health <= 0 then is_exiting = true;
 
 
     cleanup(*enemies);
     cleanup(*projectiles);
     cleanup(*pickups);
-
-    if enemies.count > 0 && frames % 10 == 0 then log("frame %: enemy0 is at %", frames, enemies[0].position);
-
-    frames += 1;
 }
 
 render :: () {
     using state;
 
+    Simp.clear_render_target(.30, .33, .37, 1);
+    Simp.set_shader_for_color();
+    Simp.immediate_begin();
+
     for pickups     render(it);
     for enemies     render(it);
                     render(player);
     for projectiles render(it);
+
+    Simp.immediate_flush();
+    Simp.swap_buffers(window.handle);
 }
 
 
 
 
 main :: () {
+    #if OS == .WINDOWS {
+        Windows :: #import "Windows";
+        Windows.SetProcessDPIAware();
+        // Windows is very bad at thread-switching by default unless you do this. Sad.
+        Windows.timeBeginPeriod(1);
+    }
+
+    window.handle = create_window(window.width, window.height, "survivor");
+    window.width, window.height = Simp.get_render_dimensions(window.handle);
+    Simp.set_render_target(window.handle);
+
     load_assets();
 
     init();
 
     using state;
 
-    while (!is_exiting) { simulate(1.0 / 60.0); render(); }
+    while (!is_exiting) {
+        prev_time := time;
+        time = current_time_monotonic();
+        dt := cast(float) to_float64_seconds(time - prev_time);
+
+        Input.update_window_events();
+
+        for Input.events_this_frame {
+            if it.type == .QUIT then is_exiting = true;
+        }
+
+        simulate(dt);
+        render();
+
+        sleep_milliseconds(10);
+        reset_temporary_storage();
+    }
 }
 
 
@@ -181,3 +217,16 @@ main :: () {
 
 #import "Basic";
 #import "Math";
+#import "Window_Creation";
+#import "System";  // For get_path_of_running_executable. @Cleanup.
+#import "String";  // For path_strip_filename. @Cleanup.
+
+Simp  :: #import "Simp";
+Input :: #import "Input";
+
+/*#run {
+    #if OS == .WINDOWS {
+        WR :: #import "Windows_Resources";
+        WR.disable_runtime_console();
+    }
+}*/
