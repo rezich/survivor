@@ -1,6 +1,6 @@
 PLAYER_CHARACTER :: Character.{
     health = 100,
-    speed  = 3
+    speed  = 30
 };
 
 PLAYER_ENTITY :: Entity.{

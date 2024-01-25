@@ -23,7 +23,7 @@ move :: inline(using entity: *Entity) {
 
 render :: (using entity: Entity) {
     using state;
-    pos := position + camera.position + Vector2.{xx window.width, xx window.height} / 2;
+    pos := to_screen_space(position);
     p0 := pos - Vector2.{radius, radius};
     p1 := pos + Vector2.{radius, radius};
 

@@ -50,3 +50,6 @@ do_moving_circles_collide :: (a_begin: Vector2, a_end: Vector2, a_radius: float,
 
     return false, .{};
 }
+
+to_screen_space :: (position) => position + state.camera.position + Vector2.{xx window.width, xx window.height} / 2;
+to_world_space  :: (position) => position - state.camera.position - Vector2.{xx window.width, xx window.height} / 2;

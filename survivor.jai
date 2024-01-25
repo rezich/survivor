@@ -11,11 +11,6 @@
 
 
 
-SECONDS_TO_SIMULATE :: 30;
-
-
-
-
 window: struct {
     handle: Window_Type;
     width  := 1280;
@@ -49,6 +44,11 @@ state: struct {
         experience:    int;
     }
 
+    input: struct {
+        cursor_world_position:          Vector2;
+        is_player_intentionally_moving: bool;
+    }
+
     camera: struct {
         position: Vector2;
     }
@@ -69,20 +69,38 @@ init :: () {
 
     player.health_max = player.health;
 
-    spawn_in_circle_around_player(ENEMY_VAMPIRE, 10, 100.0);
-    spawn_in_circle_around_player(ENEMY_GOBLIN,  20, 200.0);
+    spawn_in_circle_around_player(ENEMY_VAMPIRE, 10, 200.0);
+    spawn_in_circle_around_player(ENEMY_GOBLIN,  20, 300.0);
     //spawn(PICKUP_COIN, .{ 10, 0 });
+}
+
+handle_input :: () {
+    using state;
+
+    Input.update_window_events();
+
+    cursor_x, cursor_y, cursor_success := get_mouse_pointer_position(window.handle, true);
+
+    if cursor_success {
+        cursor_position := Vector2.{ xx cursor_x, xx cursor_y };
+        input.cursor_world_position = to_world_space(cursor_position);
+    }
+
+    for Input.events_this_frame {
+        if it.type == .QUIT then is_exiting = true;
+
+        if it.type == {
+            case .KEYBOARD;
+                if it.key_pressed && it.key_code == .ESCAPE then is_paused = !is_paused;
+                if it.key_code == .MOUSE_BUTTON_LEFT then input.is_player_intentionally_moving = xx it.key_pressed;
+        }
+    }
 }
 
 simulate :: (dt: float) {
     using state;
 
-
-    // handle player input
-    //TODO
-
-
-    // return if paused, otherwise increment time
+    // skip if paused
     if is_paused then return;
 
 
@@ -92,6 +110,14 @@ simulate :: (dt: float) {
 
     // spawn waves if needed
     //TODO
+
+
+    // determine player behavior
+    if input.is_player_intentionally_moving {
+        toward_cursor := input.cursor_world_position - player.position;
+        normalize(*toward_cursor);
+        player.velocity = toward_cursor * player.speed;
+    } else player.velocity = .{};
 
 
     // determine enemy behavior
@@ -198,12 +224,7 @@ main :: () {
         time = current_time_monotonic();
         dt := cast(float) to_float64_seconds(time - prev_time);
 
-        Input.update_window_events();
-
-        for Input.events_this_frame {
-            if it.type == .QUIT then is_exiting = true;
-        }
-
+        handle_input();
         simulate(dt);
         render();
 
