@@ -18,7 +18,7 @@ BUILD : enum { DEBUG; RELEASE; } : .DEBUG;
 /*
 
 TODO:
-  - add weapon system
+  - weapon acquisition/upgrade system
   - some kind of invulnerability window thing
   - add wave system
   - add HUD
@@ -57,8 +57,7 @@ state: struct {
         using #as base:      Entity    = PLAYER_ENTITY;
         using #as character: Character = PLAYER_CHARACTER;
 
-        //TODO: multiple weapons
-        weapon: Held_Weapon = .{ weapon = PLAYER_INITIAL_WEAPON };
+        weapons:       [..] Held_Weapon;
 
         pickup_radius: float = PLAYER_PICKUP_RADIUS;
 
@@ -84,7 +83,6 @@ state: struct {
         game: float;
     }
 
-    frames:     int;
     is_paused:  bool;
     is_exiting: bool;
 }
@@ -98,9 +96,10 @@ init :: () {
     time.real = current_time_monotonic();
 
     player.health_max = player.health;
+    for PLAYER_INITIAL_WEAPONS array_add(*player.weapons, it);
 
-    spawn_in_circle_around_player(ENEMY_VAMPIRE, 10, 200.0);
-    spawn_in_circle_around_player(ENEMY_GOBLIN,  20, 300.0);
+    spawn_around_player(ENEMY_VAMPIRE, 10, 200.0);
+    spawn_around_player(ENEMY_GOBLIN,  20, 300.0);
 }
 
 handle_input :: () {
@@ -122,7 +121,6 @@ handle_input :: () {
             case .KEYBOARD;
                 if it.key_pressed && it.key_code == .ESCAPE then is_paused = !is_paused;
                 if it.key_code == .MOUSE_BUTTON_LEFT then input.is_player_intentionally_moving = xx it.key_pressed;
-                if it.key_pressed && it.key_code == .SPACEBAR then player.position.y += 10;
         }
     }
 }

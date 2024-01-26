@@ -13,17 +13,19 @@ Held_Weapon :: struct {
 simulate_player_weapon_behavior :: inline () {
     using state;
 
-    if time.game >= player.weapon.next_shot {
-        if #complete player.weapon.shot_pattern == {
-        case .RADIAL;
-            if player.weapon.projectiles_per_shot > 1 {
-                for 0..player.weapon.projectiles_per_shot-1 {
-                    theta := TAU / player.weapon.projectiles_per_shot * it;
-                    direction := Vector2.{ cos(theta), sin(theta) };
-                    spawn(player.weapon.projectile, player.position + direction * player.radius, direction);
-                }
-            } else spawn(player.weapon.projectile, player.position, .{});
+    for * player.weapons {
+        if time.game >= it.next_shot {
+            if #complete it.shot_pattern == {
+            case .RADIAL;
+                if it.projectiles_per_shot > 1 {
+                    for i: 0..it.projectiles_per_shot-1 {
+                        theta := TAU / it.projectiles_per_shot * i;
+                        direction := Vector2.{ cos(theta), sin(theta) };
+                        spawn(it.projectile, player.position + direction * player.radius, direction);
+                    }
+                } else spawn(it.projectile, player.position, .{});
+            }
+            it.next_shot = time.game + it.shot_cooldown;
         }
-        player.weapon.next_shot = time.game + player.weapon.shot_cooldown;
     }
 }

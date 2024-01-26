@@ -18,7 +18,7 @@ spawn :: (enemy: Enemy, position: Vector2) -> *Enemy {
     return new_enemy;
 }
 
-spawn_in_circle_around_player :: (enemy: Enemy, count: int, distance: float) {
+spawn_around_player :: (enemy: Enemy, count: int, distance: float) {
     for 0..count-1 {
         theta := TAU / count * it;
         spawn(enemy, state.player.position + .{ cos(theta), sin(theta) } * distance);

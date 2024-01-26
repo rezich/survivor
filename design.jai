@@ -9,7 +9,10 @@ BACKGROUND_COLOR            :: Vector4.{ .30, .33, .37, 1 };
 
 PLAYER_PICKUP_RADIUS        :: 40;
 
-PLAYER_INITIAL_WEAPON       :: WEAPON_PULSE;
+PLAYER_INITIAL_WEAPONS      :: Held_Weapon.[
+    .{ weapon = WEAPON_SPREADSHOT },
+    .{ weapon = WEAPON_PULSE }
+];
 
 
 PLAYER_CHARACTER :: Character.{
@@ -105,7 +108,7 @@ PICKUP_EXPERIENCE_ORB :: Pickup.{
 WEAPON_SPREADSHOT :: Weapon.{
     projectile           = PROJECTILE_BULLET,
     projectiles_per_shot = 8,
-    shot_cooldown        = 1.0
+    shot_cooldown        = 0.66
 };
 
 WEAPON_PULSE :: Weapon.{
