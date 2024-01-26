@@ -1,10 +1,11 @@
 #load "src/Assets.jai";
 #load "src/Animation.jai";
-#load "src/Entity.jai";
 #load "src/Enemy.jai";
-#load "src/Projectile.jai";
+#load "src/Entity.jai";
 #load "src/Pickup.jai";
+#load "src/Projectile.jai";
 #load "src/Util.jai";
+#load "src/Weapon.jai";
 
 #load "design.jai";
 
@@ -17,8 +18,8 @@ BUILD : enum { DEBUG; RELEASE; } : .DEBUG;
 /*
 
 TODO:
-  - despawn projectiles that go off-screen
   - add weapon system
+  - some kind of invulnerability window thing
   - add wave system
   - add HUD
   - put any thought at all into the framerate controller
@@ -29,9 +30,10 @@ TODO:
 
 
 window: struct {
-    handle: Window_Type;
-    width  := 1280;
-    height := 720;
+    handle:    Window_Type;
+    width   := 1280;
+    height  := 720;
+    half_size: Vector2;
 }
 
 
@@ -55,12 +57,10 @@ state: struct {
         using #as base:      Entity    = PLAYER_ENTITY;
         using #as character: Character = PLAYER_CHARACTER;
 
-        pickup_radius: float = PLAYER_PICKUP_RADIUS;
+        //TODO: multiple weapons
+        weapon: Held_Weapon = .{ weapon = PLAYER_INITIAL_WEAPON };
 
-        next_shot_time: float;
-        TIME_BETWEEN_SHOTS   :: PLAYER_TIME_BETWEEN_SHOTS;
-        PROJECTILES_PER_SHOT :: PLAYER_PROJECTILES_PER_SHOT;
-        PROJECTILE_SPEED     :: PLAYER_PROJECTILE_SPEED;
+        pickup_radius: float = PLAYER_PICKUP_RADIUS;
 
         gold:          int;
         experience:    int;
@@ -73,6 +73,10 @@ state: struct {
 
     camera: struct {
         position: Vector2;
+        left:     float;
+        right:    float;
+        top:      float;
+        bottom:   float;
     }
 
     time: struct {
@@ -118,7 +122,7 @@ handle_input :: () {
             case .KEYBOARD;
                 if it.key_pressed && it.key_code == .ESCAPE then is_paused = !is_paused;
                 if it.key_code == .MOUSE_BUTTON_LEFT then input.is_player_intentionally_moving = xx it.key_pressed;
-                if it.key_pressed && it.key_code == .SPACEBAR then for pickups log("% %", it_index, it.position);
+                if it.key_pressed && it.key_code == .SPACEBAR then player.position.y += 10;
         }
     }
 }
@@ -126,19 +130,19 @@ handle_input :: () {
 simulate :: (dt: float) {
     using state;
 
-    // skip if paused, otherwise update game time
+    // skip rest of simulation if paused, otherwise update game time
     if is_paused then return;
     time.game += dt;
 
 
-    // fire player weapons if needed
-    if time.game >= player.next_shot_time {
-        for 0..player.PROJECTILES_PER_SHOT-1 {
-            theta := TAU / player.PROJECTILES_PER_SHOT * it;
-            offset := Vector2.{ -cos(theta), sin(theta) };
-            spawn(PROJECTILE_BULLET, player.position + offset * player.radius, offset * player.PROJECTILE_SPEED);
-        }
-        player.next_shot_time = time.game + player.TIME_BETWEEN_SHOTS;
+    // move camera
+    window.half_size = .{ xx window.width, xx window.height } * .5;
+    {
+        using camera;
+        left   = position.x - window.half_size.x;
+        right  = position.x + window.half_size.x;
+        bottom = position.y - window.half_size.y;
+        top    = position.y + window.half_size.y;
     }
 
 
@@ -146,7 +150,7 @@ simulate :: (dt: float) {
     //TODO
 
 
-    // determine player behavior
+    // simulate player
     if input.is_player_intentionally_moving {
         toward_cursor := input.cursor_world_position - player.position;
         normalize(*toward_cursor);
@@ -154,39 +158,14 @@ simulate :: (dt: float) {
     } else player.velocity = .{};
 
 
-    // determine enemy behavior
-    for * enemies {
-        toward_player := player.position - it.position;
-        normalize(*toward_player);
-        it.velocity = toward_player * it.speed;
-    }
+    // simulate weapons
+    simulate_player_weapon_behavior();
 
 
-    // determine pickup behavior
-    for * pickups {
-        it.vibration = 0;
-
-        if #complete it.status == {
-            case .IDLE;
-                distance_to_player := distance(it.position, player.position);
-                vibration_begin_distance := player.pickup_radius + Pickup.VIBRATION_RANGE;
-                if distance_to_player < vibration_begin_distance {
-                    it.vibration = (Pickup.VIBRATION_RANGE - (distance_to_player - player.pickup_radius)) * Pickup.VIBRATION_INTENSITY;
-                }
-            case .SWOOPING;
-                distance_to_swoop_target := distance(it.position, it.swoop_target);
-                if is_approximately_zero(distance_to_swoop_target, 1) then it.status = .FOLLOWING_PLAYER;
-                else {
-                    toward_swoop_target := it.swoop_target - it.position;
-                    normalize(*toward_swoop_target);
-                    it.velocity = toward_swoop_target * (distance_to_swoop_target * Pickup.SWOOP_SPEED);
-                }
-            case .FOLLOWING_PLAYER;
-                toward_player := player.position - it.position;
-                normalize(*toward_player);
-                it.velocity = toward_player * Pickup.SPEED;
-        }
-    }
+    // simulate entities
+    simulate_enemy\    _behavior();
+    simulate_pickup\   _behavior();
+    simulate_projectile_behavior(dt);
 
 
     // move entities
@@ -196,44 +175,10 @@ simulate :: (dt: float) {
                       move(*player, dt);
 
 
-    // check for collisions
-
-    // player -> pickups
-    for * pickup: pickups {
-        if pickup.status == .IDLE {
-            will_be_magnetized, _ := will_collide(player, pickup, player.pickup_radius);
-            if will_be_magnetized {
-                pickup.status = .SWOOPING;
-                away_from_player := pickup.position - player.position;
-                normalize(*away_from_player);
-                pickup.swoop_target = pickup.position + away_from_player * Pickup.SWOOP_DISTANCE;
-            }
-        }
-
-        will_be_picked_up, _ := will_collide(player, pickup);
-        if will_be_picked_up  then pick_up(pickup);
-    }
-
-    // projectiles -> enemies
-    for * projectile: projectiles {
-        for * enemy: enemies {
-            they_will_collide, _ := will_collide(projectile, enemy);
-            if they_will_collide {
-                despawn(projectile);
-                enemy.health = max(enemy.health - projectile.damage, 0);
-                if enemy.health == 0 then kill(enemy);
-                //continue projectile;
-            }
-        }
-    }
-
-    // enemies -> player
-    for enemy: enemies {
-        will_collide_with_player, _ := will_collide(enemy, player);
-        if will_collide_with_player {
-            player.health -= enemy.damage;
-        }
-    }
+    // handle collisions
+    simulate_collisions_between_player\    _and_pickups();
+    simulate_collisions_between_projectiles_and_enemies();
+    simulate_collisions_between_enemies\   _and_player ();
 
 
     // end the game if the player dies
@@ -249,7 +194,7 @@ render :: () {
     using state;
 
     Simp.clear_render_target(BACKGROUND_COLOR.x, BACKGROUND_COLOR.y, BACKGROUND_COLOR.z, BACKGROUND_COLOR.w);
-    Simp.set_shader_for_color();
+    Simp.set_shader_for_color(enable_blend = true);
     Simp.immediate_begin();
 
     for pickups     render(it);
@@ -268,7 +213,6 @@ main :: () {
     #if OS == .WINDOWS {
         Windows :: #import "Windows";
         Windows.SetProcessDPIAware();
-        // Windows is very bad at thread-switching by default unless you do this. Sad.
         Windows.timeBeginPeriod(1);
     }
 
@@ -304,11 +248,13 @@ main :: () {
 #import "Sloppy_Math";
 #import "Random";
 #import "Window_Creation";
-#import "System";  // For get_path_of_running_executable. @Cleanup.
-#import "String";  // For path_strip_filename. @Cleanup.
+//#import "System";  // For get_path_of_running_executable. @Cleanup.
+//#import "String";  // For path_strip_filename. @Cleanup.
 
-Simp  :: #import "Simp";
-Input :: #import "Input";
+Simp    :: #import "Simp";
+Input   :: #import "Input";
+//GetRect :: #import "GetRect";
+//Rect    :: GetRect.Rect;
 
 
 

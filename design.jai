@@ -9,9 +9,7 @@ BACKGROUND_COLOR            :: Vector4.{ .30, .33, .37, 1 };
 
 PLAYER_PICKUP_RADIUS        :: 40;
 
-PLAYER_TIME_BETWEEN_SHOTS   :: 1.0;
-PLAYER_PROJECTILES_PER_SHOT :: 8;
-PLAYER_PROJECTILE_SPEED     :: 400;
+PLAYER_INITIAL_WEAPON       :: WEAPON_PULSE;
 
 
 PLAYER_CHARACTER :: Character.{
@@ -52,7 +50,19 @@ ENEMY_GOBLIN :: Enemy.{
 PROJECTILE_BULLET :: Projectile.{
     sprite = .BULLET,
     radius = 4,
-    damage = 10
+    damage = 10,
+    speed  = 200,
+    growth = 2
+};
+
+PROJECTILE_PULSE :: Projectile.{
+    sprite = .PULSE_WAVE,
+    radius = 32,
+    damage = 10,
+    speed  = 0,
+    growth = 64,
+    life   = 0.5,
+    flags  = .FOLLOWS_PLAYER | .NOT_DESTROYED_UPON_COLLISION
 };
 
 
@@ -85,4 +95,21 @@ PICKUP_EXPERIENCE_ORB :: Pickup.{
     sprite     = .EXPERIENCE_ORB,
     radius     = 6,
     experience = 1
+};
+
+
+
+
+// weapon
+
+WEAPON_SPREADSHOT :: Weapon.{
+    projectile           = PROJECTILE_BULLET,
+    projectiles_per_shot = 8,
+    shot_cooldown        = 1.0
+};
+
+WEAPON_PULSE :: Weapon.{
+    projectile           = PROJECTILE_PULSE,
+    projectiles_per_shot = 1,
+    shot_cooldown        = 1.0
 };

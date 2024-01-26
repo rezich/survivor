@@ -5,6 +5,7 @@ Sprite :: enum {
     VAMPIRE;
     GOBLIN;
     BULLET;
+    PULSE_WAVE;
     EXPERIENCE_ORB;
     COIN;
     COIN_PILE;

@@ -30,7 +30,7 @@ render :: (using entity: Entity) {
     if vibration {
         theta  := random_get_within_range(0, TAU);
         amount := random_get_within_range(0, vibration);
-        vibration_vector = .{ -cos(theta) * amount, sin(theta) * amount };
+        vibration_vector = .{ cos(theta) * amount, sin(theta) * amount };
     }
 
     pos := to_screen_space(position + vibration_vector);
@@ -41,20 +41,28 @@ render :: (using entity: Entity) {
 
     // temporary sprite-based coloring until we get asset loading in
     if #complete sprite == {
-        case .PLAYER;         color = .{ 0, 1, 0,1};
-        case .VAMPIRE;        color = .{ 1, 0, 0,1};
-        case .GOBLIN;         color = .{.5, 0, 0,1};
-        case .BULLET;         color = .{ 1, 0, 1,1};
-        case .EXPERIENCE_ORB; color = .{ 0, 1, 1,1};
-        case .COIN;           color = .{ 1, 1, 0,1};
-        case .COIN_PILE;      color = .{.5,.5, 0,1};
+        case .PLAYER;         color = .{ 0, 1, 0, 1};
+        case .VAMPIRE;        color = .{ 1, 0, 0, 1};
+        case .GOBLIN;         color = .{.5, 0, 0, 1};
+        case .BULLET;         color = .{ 1, 0, 1, 1};
+        case .PULSE_WAVE;     color = .{.5, 0,.5,.5};
+        case .EXPERIENCE_ORB; color = .{ 0, 1, 1, 1};
+        case .COIN;           color = .{ 1, 1, 0, 1};
+        case .COIN_PILE;      color = .{.5,.5, 0, 1};
     }
 
     Simp.immediate_quad(p0.x, p0.y, p1.x, p1.y, color);
 }
 
-despawn :: inline (entity: *Entity) {
-    entity.is_dead = true;
+despawn :: inline (using entity: *Entity) { is_dead = true; }
+
+is_on_screen :: (using entity: *Entity) -> bool {
+    using state;
+    return
+        position.x + radius >= camera.left   &&
+        position.x - radius <= camera.right  &&
+        position.y + radius >= camera.bottom &&
+        position.y - radius <= camera.top;
 }
 
 
