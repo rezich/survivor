@@ -9,13 +9,13 @@ Pickup :: struct {
     gold:       int;
 
     MAXIMUM :: 10_000;
-    SPEED   :: 100;
+    SPEED   :: PICKUP_SPEED;
 
-    VIBRATION_RANGE     :: 32;
-    VIBRATION_INTENSITY :: 0.18;
+    VIBRATION_RANGE     :: PICKUP_VIBRATION_RANGE;
+    VIBRATION_INTENSITY :: PICKUP_VIBRATION_INTENSITY;
 
-    SWOOP_DISTANCE :: 32;
-    SWOOP_SPEED    :: 10;
+    SWOOP_DISTANCE :: PICKUP_SWOOP_DISTANCE;
+    SWOOP_SPEED    :: PICKUP_SWOOP_SPEED;
 }
 
 spawn :: (pickup: Pickup, position: Vector2) -> *Pickup {

@@ -1,3 +1,19 @@
+// game
+
+BACKGROUND_COLOR            :: Vector4.{ .30, .33, .37, 1 };
+
+
+
+
+// player
+
+PLAYER_PICKUP_RADIUS        :: 40;
+
+PLAYER_TIME_BETWEEN_SHOTS   :: 1.0;
+PLAYER_PROJECTILES_PER_SHOT :: 8;
+PLAYER_PROJECTILE_SPEED     :: 400;
+
+
 PLAYER_CHARACTER :: Character.{
     health = 100,
     speed  = 50
@@ -9,6 +25,8 @@ PLAYER_ENTITY :: Entity.{
 
 
 
+
+// enemy
 
 ENEMY_VAMPIRE :: Enemy.{
     sprite = .VAMPIRE,
@@ -29,6 +47,8 @@ ENEMY_GOBLIN :: Enemy.{
 
 
 
+// projectile
+
 PROJECTILE_BULLET :: Projectile.{
     sprite = .BULLET,
     radius = 4,
@@ -36,6 +56,17 @@ PROJECTILE_BULLET :: Projectile.{
 };
 
 
+
+
+// pickup
+
+PICKUP_SPEED               :: 120;
+
+PICKUP_VIBRATION_RANGE     :: 32;
+PICKUP_VIBRATION_INTENSITY :: 0.18;
+
+PICKUP_SWOOP_DISTANCE      :: 32;
+PICKUP_SWOOP_SPEED         :: 12;
 
 
 PICKUP_COIN :: Pickup.{

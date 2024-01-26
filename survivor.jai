@@ -55,12 +55,12 @@ state: struct {
         using #as base:      Entity    = PLAYER_ENTITY;
         using #as character: Character = PLAYER_CHARACTER;
 
-        pickup_radius: float = 48;
+        pickup_radius: float = PLAYER_PICKUP_RADIUS;
 
         next_shot_time: float;
-        TIME_BETWEEN_SHOTS   :: 1.0;
-        PROJECTILES_PER_SHOT :: 8;
-        PROJECTILE_SPEED     :: 400;
+        TIME_BETWEEN_SHOTS   :: PLAYER_TIME_BETWEEN_SHOTS;
+        PROJECTILES_PER_SHOT :: PLAYER_PROJECTILES_PER_SHOT;
+        PROJECTILE_SPEED     :: PLAYER_PROJECTILE_SPEED;
 
         gold:          int;
         experience:    int;
@@ -97,7 +97,6 @@ init :: () {
 
     spawn_in_circle_around_player(ENEMY_VAMPIRE, 10, 200.0);
     spawn_in_circle_around_player(ENEMY_GOBLIN,  20, 300.0);
-    //spawn(PICKUP_COIN, .{ 200, 0 });
 }
 
 handle_input :: () {
@@ -249,7 +248,7 @@ simulate :: (dt: float) {
 render :: () {
     using state;
 
-    Simp.clear_render_target(.30, .33, .37, 1);
+    Simp.clear_render_target(BACKGROUND_COLOR.x, BACKGROUND_COLOR.y, BACKGROUND_COLOR.z, BACKGROUND_COLOR.w);
     Simp.set_shader_for_color();
     Simp.immediate_begin();
 
@@ -292,7 +291,7 @@ main :: () {
         simulate(dt);
         render();
 
-        sleep_milliseconds(10); //TODO: an actual frame controller
+        //sleep_milliseconds(10); //TODO: an actual frame controller
         reset_temporary_storage();
     }
 }
