@@ -9,7 +9,6 @@ TODO:
   - some kind of invulnerability window thing
   - add wave system
   - add HUD
-  - actually implement asset loading
   - add a decent, reasonably competent framerate controller
 
 */

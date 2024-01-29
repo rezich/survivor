@@ -1,5 +1,3 @@
-Texture :: struct {}
-
 Sprite :: enum {
     PLAYER;
     VAMPIRE;
@@ -12,12 +10,10 @@ Sprite :: enum {
 }
 
 assets: struct {
-    textures: [#run type_info(Sprite).values.count] Texture;
+    textures: [#run type_info(Sprite).values.count] Simp.Texture;
     //animations: 
 }
 
 load_assets :: () {
-    for type_info(Sprite).names {
-        //log("% %", it_index, it);
-    }
+    for type_info(Sprite).names assert(Simp.texture_load_from_file(*assets.textures[it_index], tprint("assets/sprites/%.png", it)));
 }

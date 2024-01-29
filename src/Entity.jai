@@ -51,6 +51,7 @@ render :: (using entity: Entity) {
         case .COIN_PILE;      color = .{.5,.5, 0, 1};
     }
 
+    Simp.set_shader_for_images(*assets.textures[sprite]);
     Simp.immediate_quad(p0.x, p0.y, p1.x, p1.y, color);
 }
 
