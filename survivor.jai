@@ -66,7 +66,11 @@ state: struct {
     }
 
     input: struct {
-        cursor_world_position:          Vector2;
+        cursor_position: struct {
+            raw:    struct { x, y: int; };
+            screen: Vector2;
+            world:  Vector2;
+        }
         is_player_intentionally_moving: bool;
     }
 
@@ -102,28 +106,11 @@ init :: () {
     spawn_around_player(ENEMY_GOBLIN,  20, 300.0);
 }
 
-handle_input :: () {
-    using state;
 
-    Input.update_window_events();
+INPUT_HANDLING_CODE :: #code {
+    is_player_intentionally_moving = is_held(.MOUSE_BUTTON_LEFT);
+};
 
-    cursor_x, cursor_y, cursor_success := get_mouse_pointer_position(window.handle, true);
-
-    if cursor_success {
-        cursor_position := Vector2.{ xx cursor_x, xx cursor_y };
-        input.cursor_world_position = to_world_space(cursor_position);
-    }
-
-    for Input.events_this_frame {
-        if it.type == .QUIT then is_exiting = true;
-
-        if it.type == {
-            case .KEYBOARD;
-                if it.key_pressed && it.key_code == .ESCAPE then is_paused = !is_paused;
-                if it.key_code == .MOUSE_BUTTON_LEFT then input.is_player_intentionally_moving = xx it.key_pressed;
-        }
-    }
-}
 
 simulate :: (dt: float) {
     using state;
@@ -150,7 +137,7 @@ simulate :: (dt: float) {
 
     // simulate player
     if input.is_player_intentionally_moving {
-        toward_cursor := input.cursor_world_position - player.position;
+        toward_cursor := input.cursor_position.world - player.position;
         normalize(*toward_cursor);
         player.velocity = toward_cursor * player.speed;
     } else player.velocity = .{};
@@ -188,6 +175,7 @@ simulate :: (dt: float) {
     cleanup(*pickups);
 }
 
+
 render :: () {
     using state;
 
@@ -202,6 +190,41 @@ render :: () {
 
     Simp.immediate_flush();
     Simp.swap_buffers(window.handle);
+}
+
+
+
+
+handle_input :: () {
+    is_held     :: inline (key: Input.Key_Code) -> bool         { return xx (Input.input_button_states[key] & .DOWN);       }
+    is_pressed  :: inline (key: Input.Key_Code) -> bool #expand { return `received[key] &&  `pressed[key] && !`repeat[key]; }
+    is_released :: inline (key: Input.Key_Code) -> bool #expand { return `received[key] && !`pressed[key] && !`repeat[key]; }
+
+    Input.update_window_events();
+    using state;
+    input = .{};
+
+    using state.input;
+
+    cursor_x, cursor_y, cursor_success := get_mouse_pointer_position(window.handle, true);
+    if cursor_success then cursor_position = .{
+        raw    = .{ cursor_x, cursor_y },
+        screen = .{ xx cursor_x, xx cursor_y },
+        world  = to_world_space(Vector2.{ xx cursor_x, xx cursor_y })
+    };
+
+    received, pressed, repeat: [Input.NUM_BUTTON_STATES] bool;
+    for Input.events_this_frame {
+        if it.type == {
+        case .QUIT; is_exiting = true;
+        case .KEYBOARD;
+            received[it.key_code] = true;
+            pressed [it.key_code] = xx it.key_pressed;
+            repeat  [it.key_code] = it.repeat;
+        }
+    }
+
+    #insert,scope() INPUT_HANDLING_CODE;
 }
 
 
