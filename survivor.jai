@@ -1,16 +1,3 @@
-#load "src/Assets.jai";
-#load "src/Animation.jai";
-#load "src/Enemy.jai";
-#load "src/Entity.jai";
-#load "src/Pickup.jai";
-#load "src/Projectile.jai";
-#load "src/Util.jai";
-#load "src/Weapon.jai";
-
-#load "design.jai";
-
-
-
 BUILD : enum { DEBUG; RELEASE; } : .DEBUG;
 
 
@@ -22,19 +9,10 @@ TODO:
   - some kind of invulnerability window thing
   - add wave system
   - add HUD
-  - put any thought at all into the framerate controller
+  - actually implement asset loading
+  - add a decent, reasonably competent framerate controller
 
 */
-
-
-
-
-window: struct {
-    handle:    Window_Type;
-    width   := 1280;
-    height  := 720;
-    half_size: Vector2;
-}
 
 
 
@@ -71,7 +49,13 @@ state: struct {
             screen: Vector2;
             world:  Vector2;
         }
+
+        // player actions
         is_player_intentionally_moving: bool;
+
+        // system actions
+        is_toggling_pause:              bool;
+        is_toggling_fullscreen:         bool;
     }
 
     camera: struct {
@@ -82,10 +66,7 @@ state: struct {
         bottom:   float;
     }
 
-    time: struct {
-        real: Apollo_Time;
-        game: float;
-    }
+    time: float;
 
     is_paused:  bool;
     is_exiting: bool;
@@ -97,8 +78,6 @@ state: struct {
 init :: () {
     using state;
 
-    time.real = current_time_monotonic();
-
     player.health_max = player.health;
     for PLAYER_INITIAL_WEAPONS array_add(*player.weapons, it);
 
@@ -106,22 +85,33 @@ init :: () {
     spawn_around_player(ENEMY_GOBLIN,  20, 300.0);
 }
 
+reinit :: () { state = .{}; init(); }
+
+
+
 
 INPUT_HANDLING_CODE :: #code {
-    is_player_intentionally_moving = is_held(.MOUSE_BUTTON_LEFT);
+    is_player_intentionally_moving = is_held   (.MOUSE_BUTTON_LEFT);
+    is_toggling_pause              = is_pressed(.ESCAPE);
+    is_toggling_fullscreen         = is_pressed(.F4);
 };
+
+
 
 
 simulate :: (dt: float) {
     using state;
 
+    // toggle fullscreen
+    if input.is_toggling_fullscreen then toggle_fullscreen();
+
     // skip rest of simulation if paused, otherwise update game time
+    if input.is_toggling_pause then is_paused = !is_paused;
     if is_paused then return;
-    time.game += dt;
+    time += dt;
 
 
     // move camera
-    window.half_size = .{ xx window.width, xx window.height } * .5;
     {
         using camera;
         left   = position.x - window.half_size.x;
@@ -166,122 +156,66 @@ simulate :: (dt: float) {
     simulate_collisions_between_enemies\   _and_player ();
 
 
-    // end the game if the player dies
-    if player.health <= 0 then is_exiting = true;
+    // restart the game if the player dies
+    if player.health <= 0 then reinit();
 
 
+    // remove dead entities
     cleanup(*enemies);
     cleanup(*projectiles);
     cleanup(*pickups);
 }
 
 
-render :: () {
-    using state;
 
-    Simp.clear_render_target(BACKGROUND_COLOR.x, BACKGROUND_COLOR.y, BACKGROUND_COLOR.z, BACKGROUND_COLOR.w);
-    Simp.set_shader_for_color(enable_blend = true);
-    Simp.immediate_begin();
+
+render :: () {
+    begin_rendering();
+
+    using state;
 
     for pickups     render(it);
     for enemies     render(it);
                     render(player);
     for projectiles render(it);
 
-    Simp.immediate_flush();
-    Simp.swap_buffers(window.handle);
-}
-
-
-
-
-handle_input :: () {
-    is_held     :: inline (key: Input.Key_Code) -> bool         { return xx (Input.input_button_states[key] & .DOWN);       }
-    is_pressed  :: inline (key: Input.Key_Code) -> bool #expand { return `received[key] &&  `pressed[key] && !`repeat[key]; }
-    is_released :: inline (key: Input.Key_Code) -> bool #expand { return `received[key] && !`pressed[key] && !`repeat[key]; }
-
-    Input.update_window_events();
-    using state;
-    input = .{};
-
-    using state.input;
-
-    cursor_x, cursor_y, cursor_success := get_mouse_pointer_position(window.handle, true);
-    if cursor_success then cursor_position = .{
-        raw    = .{ cursor_x, cursor_y },
-        screen = .{ xx cursor_x, xx cursor_y },
-        world  = to_world_space(Vector2.{ xx cursor_x, xx cursor_y })
-    };
-
-    received, pressed, repeat: [Input.NUM_BUTTON_STATES] bool;
-    for Input.events_this_frame {
-        if it.type == {
-        case .QUIT; is_exiting = true;
-        case .KEYBOARD;
-            received[it.key_code] = true;
-            pressed [it.key_code] = xx it.key_pressed;
-            repeat  [it.key_code] = it.repeat;
-        }
-    }
-
-    #insert,scope() INPUT_HANDLING_CODE;
+    end_rendering();
 }
 
 
 
 
 main :: () {
-    #if OS == .WINDOWS {
-        Windows :: #import "Windows";
-        Windows.SetProcessDPIAware();
-        Windows.timeBeginPeriod(1);
-    }
-
-    window.handle = create_window(window.width, window.height, "survivor");
-    window.width, window.height = Simp.get_render_dimensions(window.handle);
-    Simp.set_render_target(window.handle);
-
+    init_engine("survivor");
     load_assets();
-
     init();
 
     using state;
 
     while (!is_exiting) {
-        prev_time := time.real;
-        time.real = current_time_monotonic();
-        dt := cast(float) to_float64_seconds(time.real - prev_time);
+        dt := advance_time();
 
         handle_input();
         simulate(dt);
         render();
 
-        //sleep_milliseconds(10); //TODO: an actual frame controller
         reset_temporary_storage();
     }
+
+    #if DEBUG_MEMORY then report_memory_leaks();
 }
 
 
 
 
-#import "Basic";
-#import "Math";
-#import "Sloppy_Math";
-#import "Random";
-#import "Window_Creation";
-//#import "System";  // For get_path_of_running_executable. @Cleanup.
-//#import "String";  // For path_strip_filename. @Cleanup.
+#load "src/Assets.jai";
+#load "src/Animation.jai";
+#load "src/Enemy.jai";
+#load "src/Engine.jai";
+#load "src/Entity.jai";
+#load "src/Pickup.jai";
+#load "src/Projectile.jai";
+#load "src/Util.jai";
+#load "src/Weapon.jai";
 
-Simp    :: #import "Simp";
-Input   :: #import "Input";
-//GetRect :: #import "GetRect";
-//Rect    :: GetRect.Rect;
-
-
-
-
-// hide console in release builds
-#if BUILD != .DEBUG then #run #if OS == .WINDOWS {
-    WR :: #import "Windows_Resources";
-    WR.disable_runtime_console();
-}
+#load "design.jai";

@@ -76,10 +76,12 @@ Entities :: struct(T: Type, CAPACITY: int) #modify {
 }
 
 spawn :: inline (using holder: *$T/Entities, entity: T.T) -> *T.T {
-    assert(count < CAPACITY);
+    if count == CAPACITY then return null;
+
     new_entity := *entities[count];
     new_entity.* = entity;
     count += 1;
+
     return new_entity;
 }
 

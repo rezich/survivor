@@ -14,7 +14,7 @@ simulate_player_weapon_behavior :: inline () {
     using state;
 
     for * player.weapons {
-        if time.game >= it.next_shot {
+        if time >= it.next_shot {
             if #complete it.shot_pattern == {
             case .RADIAL;
                 if it.projectiles_per_shot > 1 {
@@ -25,7 +25,7 @@ simulate_player_weapon_behavior :: inline () {
                     }
                 } else spawn(it.projectile, player.position, .{});
             }
-            it.next_shot = time.game + it.shot_cooldown;
+            it.next_shot = time + it.shot_cooldown;
         }
     }
 }

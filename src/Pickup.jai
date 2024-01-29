@@ -22,6 +22,9 @@ spawn :: (pickup: Pickup, position: Vector2) -> *Pickup {
     using state;
 
     new_pickup := spawn(*pickups, pickup);
+    assert(!!new_pickup);
+    //if !new_pickup then return null;
+
     new_pickup.position = position;
 
     return new_pickup;
@@ -70,7 +73,7 @@ simulate_collisions_between_player_and_pickups :: inline () {
 
     for * pickup: pickups {
         if pickup.status == .IDLE {
-            will_be_magnetized, _ := will_collide(player, pickup, player.pickup_radius);
+            will_be_magnetized := will_collide(player, pickup, player.pickup_radius);
             if will_be_magnetized {
                 pickup.status = .SWOOPING;
                 away_from_player := pickup.position - player.position;
@@ -79,7 +82,7 @@ simulate_collisions_between_player_and_pickups :: inline () {
             }
         }
 
-        will_be_picked_up, _ := will_collide(player, pickup);
+        will_be_picked_up := will_collide(player, pickup);
         if will_be_picked_up  then pick_up(pickup);
     }
 }

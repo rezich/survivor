@@ -12,6 +12,9 @@ spawn :: (enemy: Enemy, position: Vector2) -> *Enemy {
     using state;
 
     new_enemy := spawn(*enemies, enemy);
+    assert(!!new_enemy);
+    //if !new_enemy then return null;
+
     new_enemy.position   = position;
     new_enemy.health_max = new_enemy.health;
 
@@ -44,7 +47,7 @@ simulate_collisions_between_enemies_and_player :: inline () {
     using state;
 
     for enemy: enemies {
-        will_collide_with_player, _ := will_collide(enemy, player);
+        will_collide_with_player := will_collide(enemy, player);
         if will_collide_with_player {
             player.health -= enemy.damage;
         }

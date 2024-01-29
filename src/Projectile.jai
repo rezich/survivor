@@ -14,6 +14,9 @@ spawn :: (projectile: Projectile, position: Vector2, direction: Vector2) -> *Pro
     using state;
 
     new_projectile := spawn(*projectiles, projectile);
+    assert(!!new_projectile);
+    //if !new_projectile then return null;
+    
     new_projectile.position = position;
     new_projectile.velocity = direction * new_projectile.speed;
 
@@ -36,7 +39,7 @@ simulate_collisions_between_projectiles_and_enemies :: inline () {
 
     for * projectile: projectiles {
         for * enemy: enemies {
-            they_will_collide, _ := will_collide(projectile, enemy);
+            they_will_collide := will_collide(projectile, enemy);
             if they_will_collide {
                 if !(projectile.flags & .NOT_DESTROYED_UPON_COLLISION) then despawn(projectile);
                 enemy.health = max(enemy.health - projectile.damage, 0);
