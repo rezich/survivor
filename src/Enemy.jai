@@ -4,6 +4,7 @@ Enemy :: struct {
     sprite: Sprite;
 
     damage: int;
+    flags:  enum_flags { IMMUNE_TO_FIRE; }
 
     MAXIMUM :: 10_000;
 }

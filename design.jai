@@ -87,7 +87,8 @@ ENEMY_GOBLIN :: Enemy.{
     radius = 8,
     speed  = 5,
     health = 4,
-    damage = 1
+    damage = 1,
+    flags  = .IMMUNE_TO_FIRE
 };
 
 
@@ -100,7 +101,8 @@ PROJECTILE_BULLET :: Projectile.{
     radius = 4,
     damage = 10,
     speed  = 200,
-    growth = 2
+    growth = 2,
+    flags  = .IS_FIRE
 };
 
 PROJECTILE_PULSE :: Projectile.{
@@ -172,13 +174,19 @@ WEAPON_PULSE :: Weapon.{
 FLOATER_FLOAT_DISTANCE :: 16;
 FLOATER_FLOAT_SPEED    :: 40;
 
-//FLOATER_FADE_THRESHOLD :: 0.8;
 FLOATER_FADE_SPEED     :: 1.5;
 
 FLOATER_ENEMY_DAMAGE :: Floater.{
-    color = .{1,1,1,1}
+    color   = .{1,1,1,1},
+    outline = .{0,0,0,1}
+};
+
+FLOATER_ENEMY_IMMUNE :: Floater.{
+    color   = .{1,1,0,1},
+    outline = .{0,0,0,1}
 };
 
 FLOATER_PLAYER_DAMAGE :: Floater.{
-    color = .{1,0,0,1}
+    color   = .{1,0,0,1},
+    outline = .{0,0,0,1}
 };

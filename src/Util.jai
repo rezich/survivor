@@ -11,7 +11,7 @@ get_closest_point_on_line :: (point: Vector2, line_begin: Vector2, line_end: Vec
 
 do_circles_overlap :: (a: Vector2, a_radius: float, b: Vector2, b_radius: float) -> bool, Vector2 {
     radii_sum := a_radius + b_radius;
-    return abs(distance_squared(a, b)) <= radii_sum * radii_sum, .{};
+    return abs(distance_squared(a, b)) <= radii_sum * radii_sum, .{}; //TODO: get point of overlap
 }
 
 do_line_segments_intersect :: (a_begin: Vector2, a_end: Vector2, b_begin: Vector2, b_end: Vector2) -> bool, Vector2 {
@@ -69,5 +69,5 @@ draw_prepared_text_outlined :: (font: *Simp.Dynamic_Font, x: int, y: int, fg: Ve
         .{1,0}, .{1,1}, .{0,1}, .{-1,1}, .{-1,0}, .{-1,-1}, .{0,-1}, .{1,-1}
     ];
     for OUTLINE_OFFSETS Simp.draw_prepared_text(font, x + it.x, y + it.y, bg);
-    Simp.draw_prepared_text(font, x, y, .{1,1,1,1});
+    Simp.draw_prepared_text(font, x, y, fg);
 }

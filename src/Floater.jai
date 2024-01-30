@@ -1,24 +1,26 @@
 Floater :: struct {
     using #as base: Entity;
 
-    text:             string;
-    text_is_constant: bool;
     status:           enum { FLOATING; FADING; }
     color:            Vector4;
+    outline:          Vector4;
     opacity:          float = 1.0;
     initial_position: Vector2;
+    texture:          *Simp.Texture;
 
     MAXIMUM :: 10_000;
 
     FLOAT_DISTANCE :: FLOATER_FLOAT_DISTANCE;
     FLOAT_SPEED    :: FLOATER_FLOAT_SPEED;
 
-    //FADE_THRESHOLD :: FLOATER_FADE_THRESHOLD;
     FADE_SPEED     :: FLOATER_FADE_SPEED;
+
+    TEXTURE_WIDTH     :: 128;
+    TEXTURE_HEIGHT    :: 128;
+    TEXTURE_HALF_SIZE :: Vector2.{ TEXTURE_WIDTH/2.0, TEXTURE_HEIGHT/2.0 };
 }
 
-//TODO: rename spawn_floater to spawn, once the compiler bug is fixed
-spawn_floater :: (floater: Floater, position: Vector2, $$text: string) -> *Floater {
+spawn :: (floater: Floater, position: Vector2, text: string) -> *Floater {
     using state;
 
     new_floater := spawn(*floaters, floater);
@@ -27,14 +29,22 @@ spawn_floater :: (floater: Floater, position: Vector2, $$text: string) -> *Float
 
     new_floater.position         = position;
     new_floater.initial_position = position;
-    new_floater.text             = text;
-    new_floater.text_is_constant = #run is_constant(text);
+    new_floater.texture          = Simp.texture_create_render_target(Floater.TEXTURE_WIDTH, Floater.TEXTURE_HEIGHT, .RGBA8);
+
+    Simp.set_render_target(new_floater.texture);
+
+    font := assets.fonts[Font.FLOATER];
+    text_width := Simp.prepare_text(font, text);
+    text_pos := Vector2.{ Floater.TEXTURE_WIDTH/2.0 - text_width/2.0, Floater.TEXTURE_WIDTH/2.0 - font.character_height/2.0};
+    draw_prepared_text_outlined(font, xx text_pos.x, xx text_pos.y, new_floater.color, new_floater.outline);
+
+    Simp.set_render_target(window.handle);
 
     return new_floater;
 }
 
-spawn_floater :: (floater: Floater, position: Vector2, number: int) -> *Floater {
-    return spawn_floater(floater, position, sprint("%", number));
+spawn :: (floater: Floater, position: Vector2, number: int) -> *Floater {
+    return spawn(floater, position, tprint("%", number));
 }
 
 simulate_floater_behavior :: inline (dt: float) {
@@ -48,34 +58,35 @@ simulate_floater_behavior :: inline (dt: float) {
         case .FADING;
             it.opacity -= Floater.FADE_SPEED * dt;
             if it.opacity <= 0 {
-                reset  (it);
+                free_texture(it);
                 despawn(it);
             }
         }
     }
 }
 
-reset :: inline (using floater: *Floater) { if !text_is_constant then free(text); }
+free_texture :: inline (using floater: *Floater) { free(texture); }
 
-reset_floaters :: () { for * state.floaters reset(it); }
+reset_floaters :: () { for * state.floaters free_texture(it); }
 
 render :: (using floater: Floater) {
-    font := assets.fonts[Font.FLOATER];
-    text_width := Simp.prepare_text(font, text);
-    text_pos := to_screen_space(position) - Vector2.{xx text_width/2.0, xx font.character_height/2.0};
-    color_with_opacity := color;
-    color_with_opacity.w = opacity;
+    Simp.set_shader_for_images(texture);
 
-    Simp.draw_prepared_text(font, xx text_pos.x, xx text_pos.y, color_with_opacity);
+    pos := to_screen_space(position);
+    p0 := pos - TEXTURE_HALF_SIZE;
+    p1 := pos + TEXTURE_HALF_SIZE;
+
+    Simp.immediate_quad(p0.x, p0.y, p1.x, p1.y, .{1,1,1, opacity});
 }
 
 /*
 
-Something to think about is how floaters manage their memory. Right now we're just using sprint()
-to dynamically allocate a string (unless a constant string is used), and then we free() it at when
-the floater dies. This is fine for now but maybe later we can have like a Bucket_Array of strings
-or something. If we improve the floater system by rendering each floater to its own texture and then
-rendering that texture, then we can use the same stopgap measure for now, but later it would almost
-certainly be better to put these textures into a Bucket_Array or something else, as well.
+Something to think about is how floaters manage their memory. Right now we just allocate a new
+Simp.Texture on spawn, and free it on despawn. It might be beneficial to think more about this and
+use a Bucket_Array or something instead.
+
+Also, now that we're rendering the floater text once on spawn, it might be useful to separate color
+and outline out of Floater, and put it in a Floater_Definition struct or something, because Floaters
+don't need to know about their color after they've spawned.
 
 */
