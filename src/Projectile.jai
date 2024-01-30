@@ -1,5 +1,6 @@
 Projectile :: struct {
     using #as base: Entity;
+    sprite: Sprite;
 
     damage: int;
     speed:  float;
@@ -44,6 +45,7 @@ simulate_collisions_between_projectiles_and_enemies :: inline () {
                 if !(projectile.flags & .NOT_DESTROYED_UPON_COLLISION) then despawn(projectile);
                 enemy.health = max(enemy.health - projectile.damage, 0);
                 if enemy.health == 0 then kill(enemy);
+                spawn_floater(FLOATER_ENEMY_DAMAGE, enemy.position, projectile.damage);
                 //continue projectile;
             }
         }

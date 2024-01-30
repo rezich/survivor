@@ -62,4 +62,12 @@ lerp_theta :: (a: float, b: float, t: float) -> float {
 
 atan2_between :: (a, b) => atan2(a.y-b.y, a.x-b.x);
 
-easy_ease :: (x, target, speed) => x + (target - x) * speed;
+ease :: (x, target, speed) => x + (target - x) * speed;
+
+draw_prepared_text_outlined :: (font: *Simp.Dynamic_Font, x: int, y: int, fg: Vector4 = .{1,1,1,1}, bg: Vector4 = .{0,0,0,1}) {
+    OUTLINE_OFFSETS : [8] struct { x, y: int; } : .[
+        .{1,0}, .{1,1}, .{0,1}, .{-1,1}, .{-1,0}, .{-1,-1}, .{0,-1}, .{1,-1}
+    ];
+    for OUTLINE_OFFSETS Simp.draw_prepared_text(font, x + it.x, y + it.y, bg);
+    Simp.draw_prepared_text(font, x, y, .{1,1,1,1});
+}

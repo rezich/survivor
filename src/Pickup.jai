@@ -1,15 +1,19 @@
 Pickup :: struct {
     using #as base: Entity;
+    sprite: Sprite;
 
-    status: enum { IDLE; SWOOPING; FOLLOWING_PLAYER; };
+    status: enum { PLOPPING; IDLE; SWOOPING; FOLLOWING_PLAYER; };
 
-    swoop_target: Vector2;
+    radius_intended: float;
+    swoop_target:    Vector2;
 
     experience: int;
     gold:       int;
 
     MAXIMUM :: 10_000;
     SPEED   :: PICKUP_SPEED;
+
+    PLOP_SPEED :: PICKUP_PLOP_SPEED;
 
     VIBRATION_RANGE     :: PICKUP_VIBRATION_RANGE;
     VIBRATION_INTENSITY :: PICKUP_VIBRATION_INTENSITY;
@@ -25,7 +29,9 @@ spawn :: (pickup: Pickup, position: Vector2) -> *Pickup {
     assert(!!new_pickup);
     //if !new_pickup then return null;
 
-    new_pickup.position = position;
+    new_pickup.position        = position;
+    new_pickup.radius_intended = new_pickup.radius;
+    new_pickup.radius          = 0;
 
     return new_pickup;
 }
@@ -39,13 +45,20 @@ pick_up :: (using pickup: *Pickup) {
     despawn(pickup);
 }
 
-simulate_pickup_behavior :: inline () {
+simulate_pickup_behavior :: inline (dt: float) {
     using state;
 
     for * pickups {
         it.vibration = 0;
 
         if #complete it.status == {
+        case .PLOPPING;
+            it.radius = ease(it.radius, it.radius_intended, Pickup.PLOP_SPEED * dt);
+            if values_are_close(it.radius_intended, it.radius, 0.01) {
+                it.radius = it.radius_intended;
+                it.status = .IDLE;
+            }
+            #through;
         case .IDLE;
             distance_to_player := distance(it.position, player.position);
             vibration_begin_distance := player.pickup_radius + Pickup.VIBRATION_RANGE;

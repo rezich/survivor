@@ -29,10 +29,12 @@ state: struct {
     enemies:     Entities(Enemy);
     projectiles: Entities(Projectile);
     pickups:     Entities(Pickup);
+    floaters:    Entities(Floater);
 
     player: struct {
         using #as base:      Entity    = PLAYER_ENTITY;
         using #as character: Character = PLAYER_CHARACTER;
+        sprite:              Sprite    = .PLAYER;
 
         weapons:       [..] Held_Weapon;
 
@@ -55,6 +57,7 @@ state: struct {
         // system actions
         is_toggling_pause:              bool;
         is_toggling_fullscreen:         bool;
+        is_restarting:                  bool;
     }
 
     camera: struct {
@@ -84,7 +87,12 @@ init :: () {
     spawn_around_player(ENEMY_GOBLIN,  20, 300.0);
 }
 
-reinit :: () { state = .{}; init(); }
+reinit :: () {
+    array_reset(*state.player.weapons); //TODO: remove
+    reset_floaters();
+    state = .{};
+    init();
+}
 
 
 
@@ -93,6 +101,7 @@ INPUT_HANDLING_CODE :: #code {
     is_player_moving_toward_cursor = is_held   (.MOUSE_BUTTON_LEFT);
     is_toggling_pause              = is_pressed(.ESCAPE);
     is_toggling_fullscreen         = is_pressed(.F4);
+    is_restarting                  = is_pressed(.F5);
 };
 
 
@@ -101,7 +110,7 @@ INPUT_HANDLING_CODE :: #code {
 simulate :: (dt: float) {
     using state;
 
-    // toggle fullscreen
+    // handle fullscreen toggle
     if input.is_toggling_fullscreen then toggle_fullscreen();
 
     // skip rest of simulation if paused, otherwise update game time
@@ -138,7 +147,8 @@ simulate :: (dt: float) {
 
     // simulate entities
     simulate_enemy\       _behavior();
-    simulate_pickup\      _behavior();
+    simulate_pickup\      _behavior(dt);
+    simulate_floater\     _behavior(dt);
     simulate_projectile\  _behavior(dt);
 
 
@@ -163,6 +173,7 @@ simulate :: (dt: float) {
     cleanup(*enemies);
     cleanup(*projectiles);
     cleanup(*pickups);
+    cleanup(*floaters);
 }
 
 
@@ -177,6 +188,9 @@ render :: () {
     for enemies     render(it);
                     render(player);
     for projectiles render(it);
+    for floaters    render(it);
+
+    //TODO: render HUD
 
     end_rendering();
 }
@@ -187,18 +201,26 @@ render :: () {
 main :: () {
     init_engine("survivor");
     load_assets();
-    init();
 
-    using state;
+    is_restarting := true;
 
-    while (!is_exiting) {
-        dt := advance_time();
+    while (is_restarting) {
+        reinit();
+        is_restarting = false;
 
-        handle_input();
-        simulate(dt);
-        render();
+        using state;
 
-        reset_temporary_storage();
+        while (!is_exiting && !is_restarting) {
+            dt := advance_time();
+
+            handle_input();
+            simulate(dt);
+            render();
+
+            reset_temporary_storage();
+
+            if input.is_restarting then is_restarting = true;
+        }
     }
 
     #if DEBUG_MEMORY then report_memory_leaks();
@@ -212,6 +234,7 @@ main :: () {
 #load "src/Enemy.jai";
 #load "src/Engine.jai";
 #load "src/Entity.jai";
+#load "src/Floater.jai";
 #load "src/Pickup.jai";
 #load "src/Projectile.jai";
 #load "src/Util.jai";

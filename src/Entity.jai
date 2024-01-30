@@ -3,7 +3,6 @@ Entity :: struct {
     position:  Vector2;
     velocity:  Vector2;
     radius:    float;
-    sprite:    Sprite;
     vibration: float;
     //position_intended: Vector2;
 }
@@ -23,7 +22,12 @@ move :: inline(using entity: *Entity, dt: float) {
     position += velocity * dt;
 }
 
-render :: (using entity: Entity) {
+Entity_With_Sprite :: struct {
+    base:   Entity;
+    sprite: Sprite;
+}
+
+render :: (using entity: $T/interface Entity_With_Sprite) {
     using state;
 
     vibration_vector: Vector2;
@@ -66,7 +70,7 @@ Entities :: struct(T: Type) #modify {
     count:    int;
 }
 
-spawn :: inline (using holder: *$T/Entities, entity: T.T) -> *T.T {
+spawn :: (using holder: *$T/Entities, entity: T.T) -> *T.T {
     if count == T.MAXIMUM then return null;
 
     new_entity := *entities[count];

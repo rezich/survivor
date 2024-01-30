@@ -1,7 +1,7 @@
 Enemy :: struct {
     using #as base:      Entity;
     using #as character: Character;
-    //using #as animator:  Animator;
+    sprite: Sprite;
 
     damage: int;
 
@@ -50,6 +50,7 @@ simulate_collisions_between_enemies_and_player :: inline () {
         will_collide_with_player := will_collide(enemy, player);
         if will_collide_with_player {
             player.health -= enemy.damage;
+            //spawn(FLOATER_PLAYER_DAMAGE, player.position, enemy.damage);
         }
     }
 }

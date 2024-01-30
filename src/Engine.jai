@@ -49,7 +49,13 @@ handle_input :: inline () {
     Input.update_window_events();
     for Input.get_window_resizes() {
         Simp.update_window(it.window);
-        //if it.window == window.handle {}
+        if it.window == window.handle {
+            should_reload_fonts := it.width != window.width || it.height != window.height;
+            window.width = it.width;
+            window.height = it.height;
+
+            if should_reload_fonts then load_fonts();
+        }
     }
     window.half_size = .{ xx window.width, xx window.height } * .5;
 
@@ -110,8 +116,8 @@ DEBUG_MEMORY :: BUILD == .DEBUG;
 #import "Sloppy_Math";
 #import "Random";
 #import "Window_Creation";
-//#import "System";  // For get_path_of_running_executable. @Cleanup.
-//#import "String";  // For path_strip_filename. @Cleanup.
+#import "System";  // For get_path_of_running_executable. @Cleanup.
+#import "String";  // For path_strip_filename. @Cleanup.
 
 Simp    :: #import "Simp";
 Input   :: #import "Input";
