@@ -26,9 +26,9 @@ Character :: struct {
 
 
 state: struct {
-    enemies:     Entities(Enemy,           Enemy.MAXIMUM);
-    projectiles: Entities(Projectile, Projectile.MAXIMUM);
-    pickups:     Entities(Pickup,         Pickup.MAXIMUM);
+    enemies:     Entities(Enemy);
+    projectiles: Entities(Projectile);
+    pickups:     Entities(Pickup);
 
     player: struct {
         using #as base:      Entity    = PLAYER_ENTITY;
@@ -50,7 +50,7 @@ state: struct {
         }
 
         // player actions
-        is_player_intentionally_moving: bool;
+        is_player_moving_toward_cursor: bool;
 
         // system actions
         is_toggling_pause:              bool;
@@ -90,7 +90,7 @@ reinit :: () { state = .{}; init(); }
 
 
 INPUT_HANDLING_CODE :: #code {
-    is_player_intentionally_moving = is_held   (.MOUSE_BUTTON_LEFT);
+    is_player_moving_toward_cursor = is_held   (.MOUSE_BUTTON_LEFT);
     is_toggling_pause              = is_pressed(.ESCAPE);
     is_toggling_fullscreen         = is_pressed(.F4);
 };
@@ -125,7 +125,7 @@ simulate :: (dt: float) {
 
 
     // simulate player
-    if input.is_player_intentionally_moving {
+    if input.is_player_moving_toward_cursor {
         toward_cursor := input.cursor_position.world - player.position;
         normalize(*toward_cursor);
         player.velocity = toward_cursor * player.speed;
@@ -137,9 +137,9 @@ simulate :: (dt: float) {
 
 
     // simulate entities
-    simulate_enemy\    _behavior();
-    simulate_pickup\   _behavior();
-    simulate_projectile_behavior(dt);
+    simulate_enemy\       _behavior();
+    simulate_pickup\      _behavior();
+    simulate_projectile\  _behavior(dt);
 
 
     // move entities

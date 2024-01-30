@@ -39,17 +39,7 @@ render :: (using entity: Entity) {
 
     color := Vector4.{1,1,1,1};
 
-    // temporary sprite-based coloring until we get asset loading in
-    if #complete sprite == {
-        case .PLAYER;         color = .{ 0, 1, 0, 1};
-        case .VAMPIRE;        color = .{ 1, 0, 0, 1};
-        case .GOBLIN;         color = .{.5, 0, 0, 1};
-        case .BULLET;         color = .{ 1, 0, 1, 1};
-        case .PULSE_WAVE;     color = .{.5, 0,.5,.5};
-        case .EXPERIENCE_ORB; color = .{ 0, 1, 1, 1};
-        case .COIN;           color = .{ 1, 1, 0, 1};
-        case .COIN_PILE;      color = .{.5,.5, 0, 1};
-    }
+    #insert,scope() SPRITE_COLOR_CODE;
 
     Simp.set_shader_for_images(*assets.textures[sprite]);
     Simp.immediate_quad(p0.x, p0.y, p1.x, p1.y, color);
@@ -69,15 +59,15 @@ is_on_screen :: (using entity: *Entity) -> bool {
 
 
 
-Entities :: struct(T: Type, CAPACITY: int) #modify {
+Entities :: struct(T: Type) #modify {
     return (#import "Compiler").is_subclass_of(cast(*Type_Info) T, "Entity");
 } {
-    entities: [CAPACITY] T;
+    entities: [T.MAXIMUM] T;
     count:    int;
 }
 
 spawn :: inline (using holder: *$T/Entities, entity: T.T) -> *T.T {
-    if count == CAPACITY then return null;
+    if count == T.MAXIMUM then return null;
 
     new_entity := *entities[count];
     new_entity.* = entity;
@@ -101,6 +91,8 @@ operator [] :: (using holder: $T/Entities, i: int) -> *T.T {
     assert(i < count);
     return *entities[i];
 }
+
+// TODO: operator []=
 
 for_expansion :: (holder: *$T/Entities, body: Code, flags: For_Flags) #expand {
     for <=cast(bool)(flags & .REVERSE) index: 0..holder.count-1 {

@@ -5,6 +5,24 @@ BACKGROUND_COLOR            :: Vector4.{ .30, .33, .37, 1 };
 
 
 
+// sprite
+
+SPRITE_COLOR_CODE :: #code {
+    if #complete sprite == {
+        case .PLAYER;         color = .{ 0, 1, 0,  1};
+        case .VAMPIRE;        color = .{ 1, 0, 0,  1};
+        case .GOBLIN;         color = .{.5, 0, 0,  1};
+        case .BULLET;         color = .{ 1, 0, 1,  1};
+        case .PULSE_WAVE;     color = .{.5, 0,.5, .5};
+        case .EXPERIENCE_ORB; color = .{ 0, 1, 1,  1};
+        case .COIN;           color = .{ 1, 1, 0,  1};
+        case .COIN_PILE;      color = .{.5,.5, 0,  1};
+    }
+}
+
+
+
+
 // player
 
 PLAYER_PICKUP_RADIUS        :: 40;
@@ -73,13 +91,13 @@ PROJECTILE_PULSE :: Projectile.{
 
 // pickup
 
-PICKUP_SPEED               :: 120;
+PICKUP_SPEED               :: 140;
 
-PICKUP_VIBRATION_RANGE     :: 32;
-PICKUP_VIBRATION_INTENSITY :: 0.18;
+PICKUP_VIBRATION_RANGE     :: 21;
+PICKUP_VIBRATION_INTENSITY :: 0.17;
 
 PICKUP_SWOOP_DISTANCE      :: 32;
-PICKUP_SWOOP_SPEED         :: 12;
+PICKUP_SWOOP_SPEED         :: 13;
 
 
 PICKUP_COIN :: Pickup.{
