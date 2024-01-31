@@ -2,6 +2,11 @@ Floater :: struct {
     using #as base: Entity;
 
     status:           enum { FLOATING; FADING; }
+    scale:            Vector2 = SCALE_INITIAL;
+    scale_status:     enum { STRETCHING; SQUISHING; }
+    float_style:      enum { LINEAR; EASED; }
+    float_speed:      float;
+    float_distance:   float;
     color:            Vector4;
     outline:          Vector4;
     opacity:          float = 1.0;
@@ -10,10 +15,13 @@ Floater :: struct {
 
     MAXIMUM :: 10_000;
 
-    FLOAT_DISTANCE :: FLOATER_FLOAT_DISTANCE;
-    FLOAT_SPEED    :: FLOATER_FLOAT_SPEED;
-
     FADE_SPEED     :: FLOATER_FADE_SPEED;
+
+    SCALE_INITIAL                     :: FLOATER_SCALE_INITIAL;
+    SCALE_SPEED_INITIAL_TO_STRETCHED  :: FLOATER_SCALE_SPEED_INITIAL_TO_STRETCHED;
+    SCALE_STRETCHED                   :: FLOATER_SCALE_STRETCHED;
+    SCALE_SPEED_STRETCHED_TO_SQUISHED :: FLOATER_SCALE_SPEED_STRETCHED_TO_SQUISHED;
+    SCALE_SQUISHED                    :: FLOATER_SCALE_SQUISHED;
 
     TEXTURE_WIDTH     :: 128;
     TEXTURE_HEIGHT    :: 128;
@@ -51,10 +59,25 @@ simulate_floater_behavior :: inline (dt: float) {
     using state;
 
     for * floaters {
+        if #complete it.scale_status == {
+        case .STRETCHING;
+            it.scale = ease(it.scale, Floater.SCALE_STRETCHED, Floater.SCALE_SPEED_INITIAL_TO_STRETCHED * dt);
+            if values_are_close(it.scale, Floater.SCALE_STRETCHED, 0.1) then it.scale_status = .SQUISHING;
+        case .SQUISHING;
+            it.scale = ease(it.scale, Floater.SCALE_SQUISHED, Floater.SCALE_SPEED_STRETCHED_TO_SQUISHED * dt);
+            if values_are_close(it.scale, Floater.SCALE_SQUISHED, 0.1) then it.scale = Floater.SCALE_SQUISHED;
+        }
+
         if #complete it.status == {
         case .FLOATING;
-            it.position.y += Floater.FLOAT_SPEED * dt;
-            if it.position.y - it.initial_position.y >= Floater.FLOAT_DISTANCE then it.status = .FADING;
+            target_y := it.initial_position.y + it.float_distance;
+            if #complete it.float_style == {
+            case .LINEAR;
+                it.position.y += it.float_speed * dt;
+            case .EASED;
+                it.position.y = ease(it.position.y, target_y, it.float_speed * dt);
+            }
+            if values_are_close(it.position.y, target_y, 0.1) then it.status = .FADING;
         case .FADING;
             it.opacity -= Floater.FADE_SPEED * dt;
             if it.opacity <= 0 {
@@ -73,8 +96,8 @@ render :: (using floater: Floater) {
     Simp.set_shader_for_images(texture);
 
     pos := to_screen_space(position);
-    p0 := pos - TEXTURE_HALF_SIZE;
-    p1 := pos + TEXTURE_HALF_SIZE;
+    p0 := pos - (TEXTURE_HALF_SIZE * scale);
+    p1 := pos + (TEXTURE_HALF_SIZE * scale);
 
     Simp.immediate_quad(p0.x, p0.y, p1.x, p1.y, .{1,1,1, opacity});
 }
