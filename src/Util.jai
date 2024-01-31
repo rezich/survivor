@@ -71,3 +71,11 @@ draw_prepared_text_outlined :: (font: *Simp.Dynamic_Font, x: int, y: int, fg: Ve
     for OUTLINE_OFFSETS Simp.draw_prepared_text(font, x + it.x, y + it.y, bg);
     Simp.draw_prepared_text(font, x, y, fg);
 }
+
+format_time :: (time: float) -> string {
+    total_seconds := cast(int) time;
+    seconds := total_seconds % 60;
+    minutes := total_seconds / 60;
+    deciseconds := cast(int) ((time - xx total_seconds) * 100.00);
+    return tprint("%:%.%", formatInt(minutes, minimum_digits=2), formatInt(seconds, minimum_digits=2), formatInt(deciseconds, minimum_digits=2));
+}

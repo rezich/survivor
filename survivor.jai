@@ -7,9 +7,13 @@ BUILD : enum { DEBUG; RELEASE; } : .DEBUG;
 TODO:
   - weapon acquisition/upgrade system
   - some kind of invulnerability window thing
-  - add wave system
-  - add HUD
+  - add the rest of the HUD
+  - figure out what to do about Floater textures being too small on high-res (4k) displays
+  - add camera zoom, and set default zoom automatically based on window size
   - add a decent, reasonably competent framerate controller
+  - figure out how to do collision sweeps for projectiles, player, enemies
+  - add terrain
+  - add particles
 
 */
 
@@ -31,8 +35,14 @@ state: struct {
     pickups:     Entities(Pickup);
     floaters:    Entities(Floater);
 
+    stage:       struct {
+        using stage:           Stage = STAGE_FIRST;
+        current_wave:          int;
+        time_until_next_spawn: float;
+    }
+
     player: struct {
-        using #as base:      Entity    = PLAYER_ENTITY;
+        using #as entity:    Entity    = PLAYER_ENTITY;
         using #as character: Character = PLAYER_CHARACTER;
         sprite:              Sprite    = .PLAYER;
 
@@ -82,13 +92,10 @@ init :: () {
 
     player.health_max = player.health;
     for PLAYER_INITIAL_WEAPONS array_add(*player.weapons, it);
-
-    spawn_around_player(ENEMY_VAMPIRE, 10, 200.0);
-    spawn_around_player(ENEMY_GOBLIN,  20, 300.0);
 }
 
 reinit :: () {
-    array_reset(*state.player.weapons); //TODO: remove
+    array_reset(*state.player.weapons); //TODO: remove, or at least move
     reset_floaters();
     state = .{};
     init();
@@ -129,8 +136,8 @@ simulate :: (dt: float) {
     }
 
 
-    // spawn waves if needed
-    //TODO
+    // simulate stage
+    simulate_stage(dt);
 
 
     // simulate player
@@ -184,13 +191,15 @@ render :: () {
 
     using state;
 
+    { using stage.background; Simp.clear_render_target(x, y, z, w); }
+
     for pickups     render(it);
     for enemies     render(it);
                     render(player);
     for projectiles render(it);
     for floaters    render(it);
 
-    //TODO: render HUD
+    #insert,scope() HUD_RENDER_CODE;
 
     end_rendering();
 }
@@ -237,6 +246,7 @@ main :: () {
 #load "src/Floater.jai";
 #load "src/Pickup.jai";
 #load "src/Projectile.jai";
+#load "src/Stage.jai";
 #load "src/Util.jai";
 #load "src/Weapon.jai";
 

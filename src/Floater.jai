@@ -1,5 +1,5 @@
 Floater :: struct {
-    using #as base: Entity;
+    using #as entity: Entity;
 
     status:           enum { FLOATING; FADING; }
     scale:            Vector2 = SCALE_INITIAL;
@@ -73,7 +73,7 @@ simulate_floater_behavior :: inline (dt: float) {
             target_y := it.initial_position.y + it.float_distance;
             if #complete it.float_style == {
             case .LINEAR;
-                it.position.y += it.float_speed * dt;
+                it.position.y = min(it.position.y + it.float_speed * dt, target_y);
             case .EASED;
                 it.position.y = ease(it.position.y, target_y, it.float_speed * dt);
             }

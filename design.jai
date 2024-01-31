@@ -1,18 +1,18 @@
-// game
-
-BACKGROUND_COLOR            :: Vector4.{ .30, .33, .37, 1 };
-
-
-
-
 // sprite
 
 Sprite :: enum {
     PLAYER;
+
+    SPIDER;
+    BAT;
+    ZOMBIE;
     VAMPIRE;
     GOBLIN;
+    SKELETON;
+
     BULLET;
     PULSE_WAVE;
+
     EXPERIENCE_ORB;
     COIN;
     COIN_PILE;
@@ -20,14 +20,21 @@ Sprite :: enum {
 
 SPRITE_COLOR_CODE :: #code {
     if #complete sprite == {
-        case .PLAYER;         color = .{ 0, 1, 0,  1};
-        case .VAMPIRE;        color = .{ 1, 0, 0,  1};
-        case .GOBLIN;         color = .{.5, 0, 0,  1};
-        case .BULLET;         color = .{ 1, 0, 1,  1};
-        case .PULSE_WAVE;     color = .{.5, 0,.5, .5};
-        case .EXPERIENCE_ORB; color = .{ 0, 1, 1,  1};
-        case .COIN;           color = .{ 1, 1, 0,  1};
-        case .COIN_PILE;      color = .{.5,.5, 0,  1};
+        case .PLAYER;         color = .{ 0, 1, 0, 1};
+
+        case .SPIDER;         color = .{.7,.7,.7, 1};
+        case .ZOMBIE;         color = .{.3,.9,.6, 1};
+        case .BAT;            color = .{.5,.5,.5, 1};
+        case .VAMPIRE;        color = .{ 1, 0, 0, 1};
+        case .GOBLIN;         color = .{.5, 0, 0, 1};
+        case .SKELETON;       color = .{ 1, 1, 1, 1};
+
+        case .BULLET;         color = .{ 1, 0, 1, 1};
+        case .PULSE_WAVE;     color = .{.5, 0,.5,.5};
+
+        case .EXPERIENCE_ORB; color = .{ 0, 1, 1, 1};
+        case .COIN;           color = .{ 1, 1, 0, 1};
+        case .COIN_PILE;      color = .{.5,.5, 0, 1};
     }
 }
 
@@ -38,6 +45,8 @@ SPRITE_COLOR_CODE :: #code {
 
 Font :: enum {
     FLOATER;
+    CLOCK;
+    WAVE;
 }
 
 FONT_SIZE_PROCS : [#run type_info(Font).values.count] Font_Size_Proc : .[
@@ -45,7 +54,34 @@ FONT_SIZE_PROCS : [#run type_info(Font).values.count] Font_Size_Proc : .[
     () -> int {
         return window.height / 48;
     },
+    // CLOCK
+    () -> int {
+        return window.height / 16;
+    },
+    // WAVE
+    () -> int {
+        return window.height / 24;
+    },
 ];
+
+
+
+// HUD
+
+HUD_RENDER_CODE :: #code {
+    clock_pos: Vector2;
+    {
+        font := assets.fonts[Font.CLOCK];
+        text_width := Simp.prepare_text(font, format_time(time));
+        clock_pos = Vector2.{ 8, xx (window.height - font.character_height) };
+        draw_prepared_text_outlined(font, xx clock_pos.x, xx clock_pos.y);
+    }{
+        font := assets.fonts[Font.WAVE];
+        text_width := Simp.prepare_text(font, tprint("Wave %", stage.current_wave+1));
+        stage_pos := clock_pos - Vector2.{ 0, xx font.character_height };
+        draw_prepared_text_outlined(font, xx stage_pos.x, xx stage_pos.y);
+    }
+}
 
 
 
@@ -55,7 +91,7 @@ FONT_SIZE_PROCS : [#run type_info(Font).values.count] Font_Size_Proc : .[
 PLAYER_PICKUP_RADIUS        :: 40;
 
 PLAYER_INITIAL_WEAPONS      :: Held_Weapon.[
-    .{ weapon = WEAPON_SPREADSHOT },
+    //.{ weapon = WEAPON_SPREADSHOT },
     .{ weapon = WEAPON_PULSE }
 ];
 
@@ -74,10 +110,36 @@ PLAYER_ENTITY :: Entity.{
 
 // enemy
 
+ENEMY_SPAWN_OFFSET_RANGE :: 4;
+
+ENEMY_SPIDER :: Enemy.{
+    sprite = .SPIDER,
+    radius = 10,
+    speed  = 25,
+    health = 1,
+    damage = 1
+};
+
+ENEMY_ZOMBIE :: Enemy.{
+    sprite = .ZOMBIE,
+    radius = 12,
+    speed  = 20,
+    health = 2,
+    damage = 1
+};
+
+ENEMY_BAT :: Enemy.{
+    sprite = .BAT,
+    radius = 6,
+    speed  = 25,
+    health = 1,
+    damage = 1
+};
+
 ENEMY_VAMPIRE :: Enemy.{
     sprite = .VAMPIRE,
     radius = 16,
-    speed  = 3,
+    speed  = 30,
     health = 10,
     damage = 2
 };
@@ -85,10 +147,89 @@ ENEMY_VAMPIRE :: Enemy.{
 ENEMY_GOBLIN :: Enemy.{
     sprite = .GOBLIN,
     radius = 8,
-    speed  = 5,
+    speed  = 40,
     health = 4,
     damage = 1,
     flags  = .IMMUNE_TO_FIRE
+};
+
+ENEMY_SKELETON :: Enemy.{
+    sprite = .SKELETON,
+    radius = 12,
+    speed  = 30,
+    health = 20,
+    damage = 2
+};
+
+
+
+
+// stage
+
+STAGE_ENEMY_SPAWN_MAXIMUM   :: 300;
+STAGE_SECONDS_BETWEEN_WAVES :: 10;
+
+STAGE_FIRST :: Stage.{
+    background = .{ .30, .33, .37, 1 },
+    waves      = .[.{
+
+        minimum  = 15,
+        interval = 1.0,
+        enemies  = .[
+            ENEMY_SPIDER
+        ]
+
+    }, .{
+
+        minimum  = 30,
+        interval = 1.0,
+        enemies  = .[
+            ENEMY_ZOMBIE,
+            ENEMY_BAT
+        ]
+
+    }, .{
+
+        minimum  = 50,
+        interval = 0.5,
+        enemies  = .[
+            ENEMY_SPIDER
+        ]
+    }, .{
+
+        minimum  = 40,
+        interval = 0.25,
+        enemies  = .[
+            ENEMY_SKELETON
+        ]
+
+    }, .{
+
+        minimum  = 30,
+        interval = 1.0,
+        enemies  = .[
+            ENEMY_SKELETON,
+            ENEMY_GOBLIN
+        ]
+
+    }, .{
+
+        minimum  = 300,
+        interval = 0.1,
+        enemies  = .[
+            ENEMY_SKELETON
+        ]
+
+    }, .{
+
+        minimum  = 50,
+        interval = 0.5,
+        enemies  = .[
+            ENEMY_VAMPIRE,
+            ENEMY_GOBLIN
+        ]
+
+    }]
 };
 
 
@@ -124,8 +265,8 @@ PICKUP_SPEED               :: 140;
 
 PICKUP_PLOP_SPEED          :: 6.0;
 
-PICKUP_VIBRATION_RANGE     :: 21;
-PICKUP_VIBRATION_INTENSITY :: 0.17;
+PICKUP_VIBRATION_RANGE     :: 19;
+PICKUP_VIBRATION_INTENSITY :: 0.07;
 
 PICKUP_SWOOP_DISTANCE      :: 32;
 PICKUP_SWOOP_SPEED         :: 12;
@@ -184,7 +325,7 @@ FLOATER_ENEMY_DAMAGE :: Floater.{
     color          = .{ 1, 1, 1, 1},
     outline        = .{ 0, 0, 0, 1},
     float_style    = .LINEAR,
-    float_speed    = 50,
+    float_speed    = 52,
     float_distance = 20
 };
 
@@ -200,6 +341,6 @@ FLOATER_PLAYER_DAMAGE :: Floater.{
     color          = .{ 1, 0, 0, 1},
     outline        = .{ 0, 0, 0, 1},
     float_style    = .LINEAR,
-    float_speed    = 50,
+    float_speed    = 52,
     float_distance = 20
 };

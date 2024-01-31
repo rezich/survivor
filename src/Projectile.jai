@@ -1,12 +1,12 @@
 Projectile :: struct {
-    using #as base: Entity;
-    sprite: Sprite;
+    using #as entity: Entity;
+    sprite:           Sprite;
 
-    damage: int;
-    speed:  float;
-    growth: float;
-    life:   float = FLOAT32_INFINITY;
-    flags:  enum_flags { FOLLOWS_PLAYER; NOT_DESTROYED_UPON_COLLISION; IS_FIRE; };
+    damage:           int;
+    speed:            float;
+    growth:           float;
+    life:             float = FLOAT32_INFINITY;
+    flags:            enum_flags { FOLLOWS_PLAYER; NOT_DESTROYED_UPON_COLLISION; IS_FIRE; };
 
     MAXIMUM :: 10_000;
 }
@@ -39,16 +39,16 @@ simulate_collisions_between_projectiles_and_enemies :: inline () {
     using state;
 
     for * projectile: projectiles {
+        if !projectile.damage then continue;
         for * enemy: enemies {
             they_will_collide := will_collide(projectile, enemy);
             if they_will_collide {
                 if !(projectile.flags & .NOT_DESTROYED_UPON_COLLISION) then despawn(projectile);
 
-                if (projectile.flags & .IS_FIRE) && (enemy.flags & .IMMUNE_TO_FIRE) {
+                if projectile.flags & .IS_FIRE && enemy.flags & .IMMUNE_TO_FIRE {
                     spawn(FLOATER_ENEMY_IMMUNE, enemy.position, "IMMUNE!");
                     continue;
                 }
-
                 enemy.health = max(enemy.health - projectile.damage, 0);
                 if enemy.health == 0 then kill(enemy);
                 spawn(FLOATER_ENEMY_DAMAGE, enemy.position, projectile.damage);

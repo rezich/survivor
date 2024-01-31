@@ -1,10 +1,12 @@
 Enemy :: struct {
-    using #as base:      Entity;
+    using #as entity:    Entity;
     using #as character: Character;
     sprite: Sprite;
 
     damage: int;
     flags:  enum_flags { IMMUNE_TO_FIRE; }
+
+    SPAWN_OFFSET_RANGE :: ENEMY_SPAWN_OFFSET_RANGE;
 
     MAXIMUM :: 10_000;
 }
@@ -20,6 +22,14 @@ spawn :: (enemy: Enemy, position: Vector2) -> *Enemy {
     new_enemy.health_max = new_enemy.health;
 
     return new_enemy;
+}
+
+spawn_somewhere_off_screen :: (enemy: Enemy) {
+    theta       := random_get_within_range(0, TAU);
+    offset      := random_get_within_range(0, Enemy.SPAWN_OFFSET_RANGE);
+    distance    := window.pythagorean_distance + enemy.radius * (2.0 + offset*2);
+    from_camera := Vector2.{cos(theta), sin(theta)} * distance;
+    spawn(enemy, state.camera.position + from_camera);
 }
 
 spawn_around_player :: (enemy: Enemy, count: int, distance: float) {

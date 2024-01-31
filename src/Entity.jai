@@ -23,11 +23,11 @@ move :: inline(using entity: *Entity, dt: float) {
 }
 
 Entity_With_Sprite :: struct {
-    base:   Entity;
+    entity: Entity;
     sprite: Sprite;
 }
 
-render :: (using entity: $T/interface Entity_With_Sprite) {
+render :: (using,except(entity) entity: $T/interface Entity_With_Sprite) {
     using state;
 
     vibration_vector: Vector2;

@@ -1,14 +1,14 @@
 Pickup :: struct {
-    using #as base: Entity;
-    sprite: Sprite;
+    using #as entity: Entity;
+    sprite:           Sprite;
 
-    status: enum { PLOPPING; IDLE; SWOOPING; FOLLOWING_PLAYER; };
+    status:           enum { PLOPPING; IDLE; SWOOPING; FOLLOWING_PLAYER; };
 
-    radius_intended: float;
-    swoop_target:    Vector2;
+    radius_intended:  float;
+    swoop_target:     Vector2;
 
-    experience: int;
-    gold:       int;
+    experience:       int;
+    gold:             int;
 
     MAXIMUM :: 10_000;
     SPEED   :: PICKUP_SPEED;
@@ -93,9 +93,9 @@ simulate_collisions_between_player_and_pickups :: inline () {
                 normalize(*away_from_player);
                 pickup.swoop_target = pickup.position + away_from_player * Pickup.SWOOP_DISTANCE;
             }
-        }
 
-        will_be_picked_up := will_collide(player, pickup);
-        if will_be_picked_up  then pick_up(pickup);
+            will_be_picked_up := will_collide(player, pickup);
+            if will_be_picked_up  then pick_up(pickup);
+        }
     }
 }
