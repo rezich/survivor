@@ -122,6 +122,7 @@ DEBUG_MEMORY :: BUILD == .DEBUG;
 #import "Math";
 #import "Sloppy_Math";
 #import "Random";
+#import "Hash_Table";
 #import "Window_Creation";
 #import "System";  // For get_path_of_running_executable. @Cleanup.
 #import "String";  // For path_strip_filename. @Cleanup.

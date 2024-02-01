@@ -26,8 +26,8 @@ load_fonts :: () {
     }
 
     for type_info(Font).names {
-        proc := FONT_SIZE_PROCS[it_index];
-        fonts[it_index] = Simp.get_font_at_size(".", "assets/fonts/OpenSans-BoldItalic.ttf", proc()); 
+        font_size := window.height / FONT_SIZE_DENOMINATORS[it_index];
+        fonts[it_index] = Simp.get_font_at_size(".", "assets/fonts/OpenSans-BoldItalic.ttf", font_size); 
         assert(!!fonts[it_index]);
     }
 }

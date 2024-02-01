@@ -43,26 +43,26 @@ SPRITE_COLOR_CODE :: #code {
 
 // font
 
-Font :: enum {
-    FLOATER;
-    CLOCK;
-    WAVE;
-    HEALTH;
-    GOLD;
-}
-
-FONT_SIZE_PROCS : [#run type_info(Font).values.count] Font_Size_Proc : .[
-    // FLOATER
-    () => window.height / 48,
-    // CLOCK
-    () => window.height / 16,
-    // WAVE
-    () => window.height / 24,
-    // HEALTH
-    () => window.height / 16,
-    // GOLD
-    () => window.height / 24,
+FONTS :: struct { name: string; size_denominator: int; }.[
+    .{ "FLOATER", 48 },
+    .{ "CLOCK"  , 16 },
+    .{ "WAVE"   , 24 },
+    .{ "HEALTH" , 16 },
+    .{ "GOLD"   , 24 },
 ];
+
+#insert -> string {
+    builder: String_Builder;
+    append(*builder, "Font :: enum {\n");
+    for FONTS print_to_builder(*builder, "    %;\n", it.name);
+    append(*builder, "}\n");
+
+    append(*builder, "FONT_SIZE_DENOMINATORS :: int.[\n");
+    for FONTS print_to_builder(*builder, "    %,\n", it.size_denominator);
+    append(*builder, "];\n");
+
+    return builder_to_string(*builder);
+}
 
 
 
@@ -72,9 +72,9 @@ FONT_SIZE_PROCS : [#run type_info(Font).values.count] Font_Size_Proc : .[
 PLAYER_PICKUP_RADIUS        :: 40;
 
 PLAYER_INITIAL_WEAPONS      :: Held_Weapon.[
-    .{ weapon = WEAPON_SPREADSHOT },
-    .{ weapon = WEAPON_PULSE },
-    .{ weapon = WEAPON_STAFF }
+    //.{ weapon = WEAPON_SPREADSHOT },
+    //.{ weapon = WEAPON_PULSE },
+    .{ weapon = WEAPON_STAFF },
 ];
 
 
@@ -331,7 +331,7 @@ FLOATER_ENEMY_IMMUNE :: Floater.{
 
 FLOATER_PLAYER_DAMAGE :: Floater.{
     color          = .{ 1, 0, 0, 1},
-    outline        = .{ 0, 0, 0, 1},
+    outline        = .{ 1,.8,.8, 1},
     float_style    = .LINEAR,
     float_speed    = 52,
     float_distance = 20

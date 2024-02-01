@@ -3,7 +3,7 @@ simulate_hud :: (dt: float) {
 
     health_shake_amount = ifx is_approximately_zero(health_shake_amount, 1) then 0 else ease(health_shake_amount, 0, 10.0 * dt);
 
-    health_value_color_is_flashing := health_shake_amount > 5.0;
+    health_value_color_is_flashing := health_shake_amount >= 5.0;
 
     health_value_color_speed := ifx health_value_color_is_flashing then 60.0 else 20.0;
 

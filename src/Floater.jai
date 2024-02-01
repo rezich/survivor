@@ -93,6 +93,8 @@ free_texture :: inline (using floater: *Floater) { free(texture); }
 reset_floaters :: () { for * state.floaters free_texture(it); }
 
 render :: (using floater: Floater) {
+    if !is_on_screen(floater) then return;
+
     Simp.set_shader_for_images(texture);
 
     pos := to_screen_space(position);

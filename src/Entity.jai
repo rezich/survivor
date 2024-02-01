@@ -1,4 +1,5 @@
 Entity :: struct {
+    id:        u64;
     is_dead:   bool;
     position:  Vector2;
     velocity:  Vector2;
@@ -28,6 +29,8 @@ Entity_With_Sprite :: struct {
 }
 
 render :: (using,except(entity) entity: $T/interface Entity_With_Sprite) {
+    if !is_on_screen(entity) then return;
+
     using state;
 
     vibration_vector: Vector2;
@@ -68,6 +71,7 @@ Entities :: struct(T: Type) #modify {
 } {
     entities: [T.MAXIMUM] T;
     count:    int;
+    next_id:  u64;
 }
 
 spawn :: (using holder: *$T/Entities, entity: T.T) -> *T.T {
@@ -75,6 +79,8 @@ spawn :: (using holder: *$T/Entities, entity: T.T) -> *T.T {
 
     new_entity := *entities[count];
     new_entity.* = entity;
+    new_entity.id = next_id;
+    next_id += 1;
     count += 1;
 
     return new_entity;

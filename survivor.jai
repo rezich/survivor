@@ -5,9 +5,7 @@ BUILD : enum { DEBUG; RELEASE; } : .DEBUG;
 /*
 
 TODO:
-  - turn FONT_SIZE_PROCS into an array of integers with a wrapper because what the hell
   - weapon acquisition/upgrade system
-  - some kind of invulnerability window thing
   - add the rest of the HUD
   - figure out what to do about Floater textures being too small on high-res (4k) displays
   - add camera zoom, and set default zoom automatically based on window size
@@ -15,7 +13,6 @@ TODO:
   - figure out how to do collision sweeps for projectiles, player, enemies
   - add terrain
   - add particles
-  - don't render entities that are off-screen
 
 */
 
@@ -23,9 +20,9 @@ TODO:
 
 
 Character :: struct {
-    health:     int;
-    health_max: int;
-    speed:      float;
+    health:          int;
+    health_max:      int;
+    speed:           float;
 }
 
 
@@ -54,6 +51,8 @@ state: struct {
 
         gold:          int;
         experience:    int;
+
+        invulnerability_to_enemies: Table(u64, float);
     }
 
     input: struct {
@@ -95,10 +94,15 @@ state: struct {
     is_exiting: bool;
 }
 
-hurt_player :: (damage: int) {
+hurt_player :: (enemy_id: u64, damage: int, invulnerability: float) {
     using state;
+
+    if table_contains(*player.invulnerability_to_enemies, enemy_id) then return;
+    if invulnerability then table_add(*player.invulnerability_to_enemies, enemy_id, invulnerability);
+
     player.health -= damage;
-    hud.health_shake_amount = 5.0 * damage;
+
+    hud.health_shake_amount += 5.0 * damage;
     Clamp(*hud.health_shake_amount, 10.0, 50.0);
     spawn(FLOATER_PLAYER_DAMAGE, player.position, damage);
 }
@@ -110,6 +114,7 @@ initted := false;
 
 init :: () {
     if !initted {
+        deinit(*state.player.invulnerability_to_enemies); //TODO: move
         array_reset(*state.player.weapons); //TODO: remove, or at least move
         reset_floaters();
 
@@ -119,6 +124,7 @@ init :: () {
     using state;
 
     player.health_max = player.health;
+    init(*player.invulnerability_to_enemies); //TODO: determine a default capacity
     for PLAYER_INITIAL_WEAPONS array_add(*player.weapons, it);
 }
 
@@ -172,7 +178,12 @@ simulate :: (dt: float) {
         player.velocity = toward_cursor * player.speed;
     } else player.velocity = .{};
 
-    if input.is_hurting_player then hurt_player(xx (random_get() % 30));
+    for * player.invulnerability_to_enemies {
+        it.* -= dt;
+        if it.* <= 0 then remove it;
+    }
+
+    if input.is_hurting_player then hurt_player(U64_MAX, xx (random_get() % 30), 0);
 
 
     // simulate weapons
@@ -260,7 +271,10 @@ main :: () {
         }
     }
 
-    #if DEBUG_MEMORY then report_memory_leaks();
+    #if DEBUG_MEMORY {
+        reset_floaters();
+        report_memory_leaks();
+    }
 }
 
 
