@@ -40,7 +40,7 @@ spawn_around_player :: (enemy: Enemy, count: int, distance: float) {
 }
 
 kill :: (using enemy: *Enemy) {
-    spawn(PICKUP_COIN, position);
+    spawn(ifx random_get() % 100 then PICKUP_COIN else PICKUP_COIN_PILE, position);
     despawn(enemy);
 }
 

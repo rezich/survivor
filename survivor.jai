@@ -5,6 +5,7 @@ BUILD : enum { DEBUG; RELEASE; } : .DEBUG;
 /*
 
 TODO:
+  - turn FONT_SIZE_PROCS into an array of integers with a wrapper because what the hell
   - weapon acquisition/upgrade system
   - some kind of invulnerability window thing
   - add the rest of the HUD
@@ -14,6 +15,7 @@ TODO:
   - figure out how to do collision sweeps for projectiles, player, enemies
   - add terrain
   - add particles
+  - don't render entities that are off-screen
 
 */
 
@@ -68,6 +70,9 @@ state: struct {
         is_toggling_pause:              bool;
         is_toggling_fullscreen:         bool;
         is_restarting:                  bool;
+
+        // debug
+        is_spawning_coin_pile:          bool;
     }
 
     camera: struct {
@@ -87,18 +92,20 @@ state: struct {
 
 
 
+initted := false;
+
 init :: () {
+    if !initted {
+        array_reset(*state.player.weapons); //TODO: remove, or at least move
+        reset_floaters();
+
+        state = .{};
+    }
+
     using state;
 
     player.health_max = player.health;
     for PLAYER_INITIAL_WEAPONS array_add(*player.weapons, it);
-}
-
-reinit :: () {
-    array_reset(*state.player.weapons); //TODO: remove, or at least move
-    reset_floaters();
-    state = .{};
-    init();
 }
 
 
@@ -109,6 +116,7 @@ INPUT_HANDLING_CODE :: #code {
     is_toggling_pause              = is_pressed(.ESCAPE);
     is_toggling_fullscreen         = is_pressed(.F4);
     is_restarting                  = is_pressed(.F5);
+    is_spawning_coin_pile          = is_pressed(.F1);
 };
 
 
@@ -150,6 +158,8 @@ simulate :: (dt: float) {
         player.velocity = toward_cursor * player.speed;
     } else player.velocity = .{};
 
+    if input.is_spawning_coin_pile then spawn(PICKUP_COIN_PILE, player.position + .{ 100, 0 });
+
 
     // simulate weapons
     simulate_player_weapon_behavior();
@@ -176,7 +186,7 @@ simulate :: (dt: float) {
 
 
     // restart the game if the player dies
-    if player.health <= 0 then reinit();
+    if player.health <= 0 then input.is_restarting = true; //TODO: lmao
 
 
     // remove dead entities
@@ -214,15 +224,13 @@ main :: () {
     init_engine("survivor");
     load_assets();
 
-    is_restarting := true;
-
-    while (is_restarting) {
-        reinit();
-        is_restarting = false;
+    is_going_to_reinit := true;
+    while (is_going_to_reinit) {
+        init(); is_going_to_reinit = false;
 
         using state;
 
-        while (!is_exiting && !is_restarting) {
+        while (!is_exiting && !is_going_to_reinit) {
             dt := advance_time();
 
             handle_input();
@@ -230,8 +238,7 @@ main :: () {
             render();
 
             reset_temporary_storage();
-
-            if input.is_restarting then is_restarting = true;
+            is_going_to_reinit = input.is_restarting;
         }
     }
 

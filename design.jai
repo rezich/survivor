@@ -47,21 +47,21 @@ Font :: enum {
     FLOATER;
     CLOCK;
     WAVE;
+    HEALTH;
+    GOLD;
 }
 
 FONT_SIZE_PROCS : [#run type_info(Font).values.count] Font_Size_Proc : .[
     // FLOATER
-    () -> int {
-        return window.height / 48;
-    },
+    () => window.height / 48,
     // CLOCK
-    () -> int {
-        return window.height / 16;
-    },
+    () => window.height / 16,
     // WAVE
-    () -> int {
-        return window.height / 24;
-    },
+    () => window.height / 24,
+    // HEALTH
+    () => window.height / 16,
+    // GOLD
+    () => window.height / 24,
 ];
 
 
@@ -69,17 +69,32 @@ FONT_SIZE_PROCS : [#run type_info(Font).values.count] Font_Size_Proc : .[
 // HUD
 
 HUD_RENDER_CODE :: #code {
+    HUD_PADDING :: 8;
     clock_pos: Vector2;
     {
         font := assets.fonts[Font.CLOCK];
         text_width := Simp.prepare_text(font, format_time(time));
-        clock_pos = Vector2.{ 8, xx (window.height - font.character_height) };
+        clock_pos = Vector2.{ HUD_PADDING, xx (window.height - font.character_height) };
         draw_prepared_text_outlined(font, xx clock_pos.x, xx clock_pos.y);
     }{
         font := assets.fonts[Font.WAVE];
-        text_width := Simp.prepare_text(font, tprint("Wave %", stage.current_wave+1));
+        text_width := Simp.prepare_text(font, tprint("Wave %0%", stage.current_wave+1, ifx stage.current_wave == stage.waves.count-1 then " (the last one for now—it goes on forever)"));
         stage_pos := clock_pos - Vector2.{ 0, xx font.character_height };
         draw_prepared_text_outlined(font, xx stage_pos.x, xx stage_pos.y);
+    }
+
+    health_top: int;
+    {
+        font := assets.fonts[Font.HEALTH];
+        text_width := Simp.prepare_text(font, tprint("Health: %", player.health));
+        health_pos := Vector2.{ xx HUD_PADDING, xx HUD_PADDING };
+        health_top = font.character_height + HUD_PADDING;
+        draw_prepared_text_outlined(font, xx health_pos.x, xx health_pos.y);
+    }{
+        font := assets.fonts[Font.GOLD];
+        text_width := Simp.prepare_text(font, tprint("Gold: %", player.gold));
+        gold_pos := Vector2.{ HUD_PADDING, xx health_top};
+        draw_prepared_text_outlined(font, xx gold_pos.x, xx gold_pos.y);
     }
 }
 
@@ -91,7 +106,7 @@ HUD_RENDER_CODE :: #code {
 PLAYER_PICKUP_RADIUS        :: 40;
 
 PLAYER_INITIAL_WEAPONS      :: Held_Weapon.[
-    //.{ weapon = WEAPON_SPREADSHOT },
+    .{ weapon = WEAPON_SPREADSHOT },
     .{ weapon = WEAPON_PULSE },
     .{ weapon = WEAPON_STAFF }
 ];
@@ -308,7 +323,8 @@ PICKUP_COIN :: Pickup.{
 PICKUP_COIN_PILE :: Pickup.{
     sprite     = .COIN_PILE,
     radius     = 8,
-    gold       = 10
+    gold       = 10,
+    flags      = .PICK_UP_ALL_GOLD_IN_STAGE
 };
 
 PICKUP_EXPERIENCE_ORB :: Pickup.{

@@ -2,7 +2,8 @@ Pickup :: struct {
     using #as entity: Entity;
     sprite:           Sprite;
 
-    status:           enum { PLOPPING; IDLE; SWOOPING; FOLLOWING_PLAYER; };
+    status:           enum       { PLOPPING; IDLE; SWOOPING; FOLLOWING_PLAYER; };
+    flags:            enum_flags { PICK_UP_ALL_GOLD_IN_STAGE; }
 
     radius_intended:  float;
     swoop_target:     Vector2;
@@ -42,7 +43,16 @@ pick_up :: (using pickup: *Pickup) {
     player.gold       += gold;
     player.experience += experience;
 
+    if flags & .PICK_UP_ALL_GOLD_IN_STAGE for * pickups if (it.status == .PLOPPING || it.status == .IDLE) && it.gold > 0 then begin_magnetizing(it);
+
     despawn(pickup);
+}
+
+begin_magnetizing :: (using pickup: *Pickup) {
+    pickup.status = .SWOOPING;
+    away_from_player := pickup.position - state.player.position;
+    normalize(*away_from_player);
+    pickup.swoop_target = pickup.position + away_from_player * Pickup.SWOOP_DISTANCE;
 }
 
 simulate_pickup_behavior :: inline (dt: float) {
@@ -85,17 +95,12 @@ simulate_collisions_between_player_and_pickups :: inline () {
     using state;
 
     for * pickup: pickups {
-        if pickup.status == .IDLE {
+        if pickup.status == .IDLE || pickup.status == .PLOPPING {
             will_be_magnetized := will_collide(player, pickup, player.pickup_radius);
-            if will_be_magnetized {
-                pickup.status = .SWOOPING;
-                away_from_player := pickup.position - player.position;
-                normalize(*away_from_player);
-                pickup.swoop_target = pickup.position + away_from_player * Pickup.SWOOP_DISTANCE;
-            }
-
-            will_be_picked_up := will_collide(player, pickup);
-            if will_be_picked_up  then pick_up(pickup);
+            if will_be_magnetized then begin_magnetizing(pickup);
         }
+
+        will_be_picked_up := will_collide(player, pickup);
+        if will_be_picked_up  then pick_up(pickup);
     }
 }
