@@ -44,11 +44,9 @@ SPRITE_COLOR_CODE :: #code {
 // font
 
 FONTS :: struct { name: string; size_denominator: int; }.[
-    .{ "FLOATER", 48 },
-    .{ "CLOCK"  , 16 },
-    .{ "WAVE"   , 24 },
-    .{ "HEALTH" , 16 },
-    .{ "GOLD"   , 24 },
+    .{ "FLOATER"   , 48 },
+    .{ "HUD_LARGE" , 16 },
+    .{ "HUD_SMALL" , 24 },
 ];
 
 #insert -> string {

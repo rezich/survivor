@@ -56,6 +56,7 @@ kill :: (using enemy: *Enemy) {
     spawn(ifx random_get() % 100 then PICKUP_COIN else PICKUP_COIN_PILE, position);
     deinit(*enemy.invulnerability_to_projectiles);
     despawn(enemy);
+    state.player.kills += 1;
 }
 
 reset_enemies :: () { for * state.enemies deinit(*it.invulnerability_to_projectiles); }

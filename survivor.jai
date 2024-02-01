@@ -5,6 +5,7 @@ BUILD : enum { DEBUG; RELEASE; } : .DEBUG;
 /*
 
 TODO:
+  - massively clean up HUD text rendering
   - weapon acquisition/upgrade system
   - add the rest of the HUD
   - figure out what to do about Floater textures being too small on high-res (4k) displays
@@ -50,6 +51,7 @@ state: struct {
         pickup_radius: float = PLAYER_PICKUP_RADIUS;
 
         gold:          int;
+        kills:         int;
         experience:    int;
 
         invulnerability_to_enemies: Table(u64, float);

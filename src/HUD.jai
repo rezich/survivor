@@ -17,12 +17,12 @@ render_hud :: () {
     HUD_PADDING :: 8;
     clock_pos: Vector2;
     {
-        font := assets.fonts[Font.CLOCK];
+        font := assets.fonts[Font.HUD_LARGE];
         text_width := Simp.prepare_text(font, format_time(time));
         clock_pos = Vector2.{ HUD_PADDING, xx (window.height - font.character_height) };
         draw_prepared_text_outlined(font, xx clock_pos.x, xx clock_pos.y);
     }{
-        font := assets.fonts[Font.WAVE];
+        font := assets.fonts[Font.HUD_SMALL];
         text_width := Simp.prepare_text(font, tprint("Wave %0%", stage.current_wave+1, ifx stage.current_wave == stage.waves.count-1 then " (the last one for now—it goes on forever)"));
         stage_pos := clock_pos - Vector2.{ 0, xx font.character_height };
         draw_prepared_text_outlined(font, xx stage_pos.x, xx stage_pos.y);
@@ -30,10 +30,10 @@ render_hud :: () {
 
     health_top: int;
     {
-        font := assets.fonts[Font.HEALTH];
+        font := assets.fonts[Font.HUD_LARGE];
         health_label_width := Simp.prepare_text(font, "Health: ");
         health_pos := Vector2.{ xx HUD_PADDING, xx HUD_PADDING };
-        health_top = font.character_height + HUD_PADDING;
+        health_top = font.character_height + xx health_pos.y;
         draw_prepared_text_outlined(font, xx health_pos.x, xx health_pos.y, .{.9,.9,.9,1});
 
         health_right := health_pos.x + health_label_width;
@@ -48,10 +48,28 @@ render_hud :: () {
 
             health_right += digit_width;
         }
-    }{
-        font := assets.fonts[Font.GOLD];
+    }
+
+    experience_top: int;
+    {
+        font := assets.fonts[Font.HUD_SMALL];
+        text_width := Simp.prepare_text(font, "Experience: ");
+        experience_pos := Vector2.{ HUD_PADDING, xx health_top};
+        experience_top = font.character_height + xx experience_pos.y;
+        draw_prepared_text_outlined(font, xx experience_pos.x, xx experience_pos.y, .{.9,.9,.9,1});
+
+        experience_right := experience_pos.x + text_width;
+        text_width = Simp.prepare_text(font, tprint("%", player.experience));
+        experience_value_pos := Vector2.{ experience_right, experience_pos.y };
+        draw_prepared_text_outlined(font, xx experience_value_pos.x, xx experience_value_pos.y);
+    }
+
+    gold_top: int;
+    {
+        font := assets.fonts[Font.HUD_SMALL];
         text_width := Simp.prepare_text(font, "Gold: ");
-        gold_pos := Vector2.{ HUD_PADDING, xx health_top};
+        gold_pos := Vector2.{ HUD_PADDING, xx experience_top};
+        gold_top = font.character_height + xx gold_pos.y;
         draw_prepared_text_outlined(font, xx gold_pos.x, xx gold_pos.y, .{.9,.9,.9,1});
 
         gold_right := gold_pos.x + text_width;
@@ -59,6 +77,22 @@ render_hud :: () {
         gold_value_pos := Vector2.{ gold_right, gold_pos.y };
         draw_prepared_text_outlined(font, xx gold_value_pos.x, xx gold_value_pos.y);
     }
+
+    kills_top: int;
+    {
+        font := assets.fonts[Font.HUD_SMALL];
+        text_width := Simp.prepare_text(font, "Kills: ");
+        kills_pos := Vector2.{ HUD_PADDING, xx gold_top};
+        kills_top = font.character_height + xx kills_pos.y;
+        draw_prepared_text_outlined(font, xx kills_pos.x, xx kills_pos.y, .{.9,.9,.9,1});
+
+        kills_right := kills_pos.x + text_width;
+        text_width = Simp.prepare_text(font, tprint("%", player.kills));
+        kills_value_pos := Vector2.{ kills_right, kills_pos.y };
+        draw_prepared_text_outlined(font, xx kills_value_pos.x, xx kills_value_pos.y);
+    }
+    
+    
 }
 
 get_health_color :: (health: int, max_health: int) -> Vector4 {
