@@ -8,6 +8,8 @@ Projectile :: struct {
     life:             float = FLOAT32_INFINITY;
     flags:            enum_flags { FOLLOWS_PLAYER; NOT_DESTROYED_UPON_COLLISION; IS_FIRE; };
 
+    invulnerability:  float = 0.5; // bad name; invulnerability that's conferred to enemy on hit
+
     MAXIMUM :: 10_000;
 }
 
@@ -49,9 +51,8 @@ simulate_collisions_between_projectiles_and_enemies :: inline () {
                     spawn(FLOATER_ENEMY_IMMUNE, enemy.position, "IMMUNE!");
                     continue;
                 }
-                enemy.health = max(enemy.health - projectile.damage, 0);
-                if enemy.health == 0 then kill(enemy);
-                spawn(FLOATER_ENEMY_DAMAGE, enemy.position, projectile.damage);
+                
+                hurt(enemy, projectile.damage, projectile.id, projectile.invulnerability);
                 //continue projectile;
             }
         }

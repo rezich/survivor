@@ -104,7 +104,25 @@ hurt_player :: (enemy_id: u64, damage: int, invulnerability: float) {
 
     hud.health_shake_amount += 5.0 * damage;
     Clamp(*hud.health_shake_amount, 10.0, 50.0);
+
     spawn(FLOATER_PLAYER_DAMAGE, player.position, damage);
+}
+
+simulate_player :: (dt: float) {
+    using state;
+
+    if input.is_player_moving_toward_cursor {
+        toward_cursor := input.cursor_position.world - player.position;
+        normalize(*toward_cursor);
+        player.velocity = toward_cursor * player.speed;
+    } else player.velocity = .{};
+
+    for * player.invulnerability_to_enemies {
+        it.* -= dt;
+        if it.* <= 0 then remove it;
+    }
+
+    if input.is_hurting_player then hurt_player(U64_MAX, xx (random_get() % 30), 0);
 }
 
 
@@ -113,13 +131,7 @@ hurt_player :: (enemy_id: u64, damage: int, invulnerability: float) {
 initted := false;
 
 init :: () {
-    if !initted {
-        deinit(*state.player.invulnerability_to_enemies); //TODO: move
-        array_reset(*state.player.weapons); //TODO: remove, or at least move
-        reset_floaters();
-
-        state = .{};
-    }
+    if initted { reset(); state = .{}; } initted = true;
 
     using state;
 
@@ -128,14 +140,23 @@ init :: () {
     for PLAYER_INITIAL_WEAPONS array_add(*player.weapons, it);
 }
 
+reset :: () {
+    deinit(*state.player.invulnerability_to_enemies);
+    array_reset(*state.player.weapons); //TODO: remove, or at least move
+    reset_floaters();
+    reset_enemies();
+}
+
 
 
 
 INPUT_HANDLING_CODE :: #code {
     is_player_moving_toward_cursor = is_held   (.MOUSE_BUTTON_LEFT);
+
     is_toggling_pause              = is_pressed(.ESCAPE);
     is_toggling_fullscreen         = is_pressed(.F4);
     is_restarting                  = is_pressed(.F5);
+
     is_hurting_player              = is_pressed(.F1);
 };
 
@@ -172,18 +193,7 @@ simulate :: (dt: float) {
 
 
     // simulate player
-    if input.is_player_moving_toward_cursor {
-        toward_cursor := input.cursor_position.world - player.position;
-        normalize(*toward_cursor);
-        player.velocity = toward_cursor * player.speed;
-    } else player.velocity = .{};
-
-    for * player.invulnerability_to_enemies {
-        it.* -= dt;
-        if it.* <= 0 then remove it;
-    }
-
-    if input.is_hurting_player then hurt_player(U64_MAX, xx (random_get() % 30), 0);
+    simulate_player(dt);
 
 
     // simulate weapons
@@ -191,7 +201,7 @@ simulate :: (dt: float) {
 
 
     // simulate entities
-    simulate_enemy\       _behavior();
+    simulate_enemy\       _behavior(dt);
     simulate_pickup\      _behavior(dt);
     simulate_floater\     _behavior(dt);
     simulate_projectile\  _behavior(dt);
@@ -254,12 +264,12 @@ main :: () {
     load_assets();
 
     is_going_to_reinit := true;
-    while (is_going_to_reinit) {
+    while is_going_to_reinit {
         init(); is_going_to_reinit = false;
 
         using state;
 
-        while (!is_exiting && !is_going_to_reinit) {
+        while !is_exiting && !is_going_to_reinit {
             dt := advance_time();
 
             handle_input();
@@ -272,7 +282,7 @@ main :: () {
     }
 
     #if DEBUG_MEMORY {
-        reset_floaters();
+        reset();
         report_memory_leaks();
     }
 }

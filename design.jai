@@ -73,8 +73,8 @@ PLAYER_PICKUP_RADIUS        :: 40;
 
 PLAYER_INITIAL_WEAPONS      :: Held_Weapon.[
     //.{ weapon = WEAPON_SPREADSHOT },
-    //.{ weapon = WEAPON_PULSE },
-    .{ weapon = WEAPON_STAFF },
+    .{ weapon = WEAPON_PULSE },
+    //.{ weapon = WEAPON_STAFF },
 ];
 
 
@@ -139,8 +139,8 @@ ENEMY_SKELETON :: Enemy.{
     sprite = .SKELETON,
     radius = 12,
     speed  = 30,
-    health = 20,
-    damage = 2
+    health = 10,
+    damage = 5
 };
 
 
@@ -177,6 +177,7 @@ STAGE_FIRST :: Stage.{
         enemies  = .[
             ENEMY_SPIDER
         ]
+
     }, .{
 
         minimum  = 40,
@@ -257,7 +258,7 @@ PROJECTILE_BULLET :: Projectile.{
 PROJECTILE_PULSE :: Projectile.{
     sprite = .PULSE_WAVE,
     radius = 32,
-    damage = 10,
+    damage = 1,
     speed  = 0,
     growth = 64,
     life   = 0.5,

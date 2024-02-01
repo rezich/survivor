@@ -49,6 +49,7 @@ pick_up :: (using pickup: *Pickup) {
 }
 
 begin_magnetizing :: (using pickup: *Pickup) {
+    pickup.radius = pickup.radius_intended; // kinda a hack
     pickup.status = .SWOOPING;
     away_from_player := pickup.position - state.player.position;
     normalize(*away_from_player);
@@ -95,7 +96,7 @@ simulate_collisions_between_player_and_pickups :: inline () {
     using state;
 
     for * pickup: pickups {
-        if pickup.status == .IDLE || pickup.status == .PLOPPING {
+        if pickup.status == .IDLE {
             will_be_magnetized := will_collide(player, pickup, player.pickup_radius);
             if will_be_magnetized then begin_magnetizing(pickup);
         }

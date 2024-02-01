@@ -23,7 +23,7 @@ simulate_stage :: (dt: float) {
         wave := waves[current_wave];
         enemy_index := 0;
 
-        if state.enemies.count < wave.minimum then while (state.enemies.count < wave.minimum) {
+        if state.enemies.count < wave.minimum then while state.enemies.count < wave.minimum {
             spawn_somewhere_off_screen(wave.enemies[enemy_index]);
             enemy_index = (enemy_index + 1) % wave.enemies.count;
         } else if state.enemies.count < ENEMY_SPAWN_MAXIMUM then for wave.enemies spawn_somewhere_off_screen(it);

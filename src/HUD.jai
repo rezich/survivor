@@ -7,7 +7,7 @@ simulate_hud :: (dt: float) {
 
     health_value_color_speed := ifx health_value_color_is_flashing then 60.0 else 20.0;
 
-    health_value_color = ease_color(health_value_color, ifx health_value_color_is_flashing then Vector4.{1,0,0,1} else get_health_color(cast(float) player.health / cast(float) player.health_max), health_value_color_speed * dt);
+    health_value_color = ease_color(health_value_color, ifx health_value_color_is_flashing then Vector4.{1,0,0,1} else get_health_color(player.health, player.health_max), health_value_color_speed * dt);
     health_value_outline_color = ease_color(health_value_outline_color, ifx health_value_color_is_flashing then Vector4.{1,1,1,1} else .{0,0,0,1}, health_value_color_speed * dt);
 }
 
@@ -61,11 +61,15 @@ render_hud :: () {
     }
 }
 
-get_health_color :: (health_to_max_health_ratio: float) -> Vector4 {
-    WHITE  :: Vector4.{1,1,1,1};
-    YELLOW :: Vector4.{1,1,0,1};
-    RED    :: Vector4.{1,0,0,1};
+get_health_color :: (health: int, max_health: int) -> Vector4 {
+    WHITE  :: Vector4.{ 1, 1, 1,1};
+    YELLOW :: Vector4.{ 1, 1, 0,1};
+    RED    :: Vector4.{ 1, 0, 0,1};
+    MAROON :: Vector4.{.5, 0, 0,1};
 
-    if health_to_max_health_ratio > 0.5 then return ease_color(YELLOW, WHITE, (health_to_max_health_ratio - 0.5) * 2.0);
-    return ease_color(RED, YELLOW, health_to_max_health_ratio * 2.0);
+    ratio := cast(float) health / cast(float) max_health;
+
+    if ratio > 0.5  then return ease_color(YELLOW, WHITE , (ratio - 0.5) * 2.0);
+    if ratio > 0.25 then return ease_color(RED   , YELLOW,  ratio        * 2.0);
+                         return ease_color(MAROON, RED   ,  ratio        * 4.0);
 }
