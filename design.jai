@@ -92,7 +92,8 @@ PLAYER_PICKUP_RADIUS        :: 40;
 
 PLAYER_INITIAL_WEAPONS      :: Held_Weapon.[
     //.{ weapon = WEAPON_SPREADSHOT },
-    .{ weapon = WEAPON_PULSE }
+    .{ weapon = WEAPON_PULSE },
+    .{ weapon = WEAPON_STAFF }
 ];
 
 
@@ -235,6 +236,32 @@ STAGE_FIRST :: Stage.{
 
 
 
+// weapon
+
+WEAPON_SPREADSHOT :: Weapon.{
+    projectile           = PROJECTILE_BULLET,
+    projectiles_per_shot = 8,
+    shot_pattern         = .RADIAL,
+    shot_cooldown        = 0.66
+};
+
+WEAPON_PULSE :: Weapon.{
+    projectile           = PROJECTILE_PULSE,
+    projectiles_per_shot = 1,
+    shot_pattern         = .RADIAL,
+    shot_cooldown        = 1.0
+};
+
+WEAPON_STAFF :: Weapon.{
+    projectile           = PROJECTILE_BULLET,
+    projectiles_per_shot = 1,
+    shot_pattern         = .AIM_AT_NEAREST_ENEMY,
+    shot_cooldown        = 2
+};
+
+
+
+
 // projectile
 
 PROJECTILE_BULLET :: Projectile.{
@@ -288,23 +315,6 @@ PICKUP_EXPERIENCE_ORB :: Pickup.{
     sprite     = .EXPERIENCE_ORB,
     radius     = 6,
     experience = 1
-};
-
-
-
-
-// weapon
-
-WEAPON_SPREADSHOT :: Weapon.{
-    projectile           = PROJECTILE_BULLET,
-    projectiles_per_shot = 8,
-    shot_cooldown        = 0.66
-};
-
-WEAPON_PULSE :: Weapon.{
-    projectile           = PROJECTILE_PULSE,
-    projectiles_per_shot = 1,
-    shot_cooldown        = 1.0
 };
 
 

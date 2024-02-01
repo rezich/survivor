@@ -51,7 +51,7 @@ render :: (using,except(entity) entity: $T/interface Entity_With_Sprite) {
 
 despawn :: inline (using entity: *Entity) { is_dead = true; }
 
-is_on_screen :: (using entity: *Entity) -> bool {
+is_on_screen :: (using entity: Entity) -> bool {
     using state;
     return
         position.x + radius >= camera.left   &&

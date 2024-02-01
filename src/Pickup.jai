@@ -54,7 +54,7 @@ simulate_pickup_behavior :: inline (dt: float) {
         if #complete it.status == {
         case .PLOPPING;
             it.radius = ease(it.radius, it.radius_intended, Pickup.PLOP_SPEED * dt);
-            if values_are_close(it.radius_intended, it.radius, 0.01) {
+            if values_are_close(it.radius_intended, it.radius, 0.1) {
                 it.radius = it.radius_intended;
                 it.status = .IDLE;
             }

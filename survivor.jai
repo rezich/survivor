@@ -129,6 +129,9 @@ simulate :: (dt: float) {
     // move camera
     {
         using camera;
+
+        position = player.position;
+
         left   = position.x - window.half_size.x;
         right  = position.x + window.half_size.x;
         bottom = position.y - window.half_size.y;
