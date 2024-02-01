@@ -64,6 +64,10 @@ atan2_between :: (a, b) => atan2(a.y-b.y, a.x-b.x);
 
 ease :: (x, target, speed) => x + (target - x) * speed;
 
+ease_color :: (x: Vector4, target: Vector4, speed: float) -> Vector4 {
+    return .{ ease(x.x, target.x, speed), ease(x.y, target.y, speed), ease(x.z, target.z, speed), ease(x.w, target.w, speed) };
+}
+
 draw_prepared_text_outlined :: (font: *Simp.Dynamic_Font, x: int, y: int, fg: Vector4 = .{1,1,1,1}, bg: Vector4 = .{0,0,0,1}) {
     OUTLINE_OFFSETS : [8] struct { x, y: int; } : .[
         .{1,0}, .{1,1}, .{0,1}, .{-1,1}, .{-1,0}, .{-1,-1}, .{0,-1}, .{1,-1}

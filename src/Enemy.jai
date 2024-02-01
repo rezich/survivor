@@ -57,11 +57,5 @@ simulate_enemy_behavior :: inline () {
 simulate_collisions_between_enemies_and_player :: inline () {
     using state;
 
-    for enemy: enemies {
-        will_collide_with_player := will_collide(enemy, player);
-        if will_collide_with_player {
-            player.health -= enemy.damage;
-            //spawn(FLOATER_PLAYER_DAMAGE, player.position, enemy.damage);
-        }
-    }
+    for enemies if will_collide(it, player) then hurt_player(it.damage);
 }

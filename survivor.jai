@@ -72,7 +72,7 @@ state: struct {
         is_restarting:                  bool;
 
         // debug
-        is_spawning_coin_pile:          bool;
+        is_hurting_player:              bool;
     }
 
     camera: struct {
@@ -83,10 +83,24 @@ state: struct {
         bottom:   float;
     }
 
+    hud: struct {
+        health_shake_amount:        float;
+        health_value_color:         Vector4;
+        health_value_outline_color: Vector4;
+    }
+
     time: float;
 
     is_paused:  bool;
     is_exiting: bool;
+}
+
+hurt_player :: (damage: int) {
+    using state;
+    player.health -= damage;
+    hud.health_shake_amount = 5.0 * damage;
+    Clamp(*hud.health_shake_amount, 10.0, 50.0);
+    spawn(FLOATER_PLAYER_DAMAGE, player.position, damage);
 }
 
 
@@ -116,7 +130,7 @@ INPUT_HANDLING_CODE :: #code {
     is_toggling_pause              = is_pressed(.ESCAPE);
     is_toggling_fullscreen         = is_pressed(.F4);
     is_restarting                  = is_pressed(.F5);
-    is_spawning_coin_pile          = is_pressed(.F1);
+    is_hurting_player              = is_pressed(.F1);
 };
 
 
@@ -158,7 +172,7 @@ simulate :: (dt: float) {
         player.velocity = toward_cursor * player.speed;
     } else player.velocity = .{};
 
-    if input.is_spawning_coin_pile then spawn(PICKUP_COIN_PILE, player.position + .{ 100, 0 });
+    if input.is_hurting_player then hurt_player(xx (random_get() % 30));
 
 
     // simulate weapons
@@ -183,6 +197,10 @@ simulate :: (dt: float) {
     simulate_collisions_between_player\    _and_pickups();
     simulate_collisions_between_projectiles_and_enemies();
     simulate_collisions_between_enemies\   _and_player ();
+
+
+    // simulate HUD
+    simulate_hud(dt);
 
 
     // restart the game if the player dies
@@ -212,7 +230,7 @@ render :: () {
     for projectiles render(it);
     for floaters    render(it);
 
-    #insert,scope() HUD_RENDER_CODE;
+    render_hud();
 
     end_rendering();
 }
@@ -254,6 +272,7 @@ main :: () {
 #load "src/Engine.jai";
 #load "src/Entity.jai";
 #load "src/Floater.jai";
+#load "src/HUD.jai";
 #load "src/Pickup.jai";
 #load "src/Projectile.jai";
 #load "src/Stage.jai";

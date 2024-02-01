@@ -66,40 +66,6 @@ FONT_SIZE_PROCS : [#run type_info(Font).values.count] Font_Size_Proc : .[
 
 
 
-// HUD
-
-HUD_RENDER_CODE :: #code {
-    HUD_PADDING :: 8;
-    clock_pos: Vector2;
-    {
-        font := assets.fonts[Font.CLOCK];
-        text_width := Simp.prepare_text(font, format_time(time));
-        clock_pos = Vector2.{ HUD_PADDING, xx (window.height - font.character_height) };
-        draw_prepared_text_outlined(font, xx clock_pos.x, xx clock_pos.y);
-    }{
-        font := assets.fonts[Font.WAVE];
-        text_width := Simp.prepare_text(font, tprint("Wave %0%", stage.current_wave+1, ifx stage.current_wave == stage.waves.count-1 then " (the last one for now—it goes on forever)"));
-        stage_pos := clock_pos - Vector2.{ 0, xx font.character_height };
-        draw_prepared_text_outlined(font, xx stage_pos.x, xx stage_pos.y);
-    }
-
-    health_top: int;
-    {
-        font := assets.fonts[Font.HEALTH];
-        text_width := Simp.prepare_text(font, tprint("Health: %", player.health));
-        health_pos := Vector2.{ xx HUD_PADDING, xx HUD_PADDING };
-        health_top = font.character_height + HUD_PADDING;
-        draw_prepared_text_outlined(font, xx health_pos.x, xx health_pos.y);
-    }{
-        font := assets.fonts[Font.GOLD];
-        text_width := Simp.prepare_text(font, tprint("Gold: %", player.gold));
-        gold_pos := Vector2.{ HUD_PADDING, xx health_top};
-        draw_prepared_text_outlined(font, xx gold_pos.x, xx gold_pos.y);
-    }
-}
-
-
-
 
 // player
 
