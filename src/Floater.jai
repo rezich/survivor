@@ -7,6 +7,8 @@ Floater :: struct {
     float_style:      enum { LINEAR; EASED; }
     float_speed:      float;
     float_distance:   float;
+    text:             string;
+    text_is_constant: bool;
     color:            Vector4;
     outline:          Vector4;
     opacity:          float = 1.0;
@@ -22,13 +24,11 @@ Floater :: struct {
     SCALE_STRETCHED                   :: FLOATER_SCALE_STRETCHED;
     SCALE_SPEED_STRETCHED_TO_SQUISHED :: FLOATER_SCALE_SPEED_STRETCHED_TO_SQUISHED;
     SCALE_SQUISHED                    :: FLOATER_SCALE_SQUISHED;
-
-    TEXTURE_WIDTH     :: 128;
-    TEXTURE_HEIGHT    :: 128;
-    TEXTURE_HALF_SIZE :: Vector2.{ TEXTURE_WIDTH/2.0, TEXTURE_HEIGHT/2.0 };
 }
 
-spawn :: (floater: Floater, position: Vector2, text: string) -> *Floater {
+floater_texture_size: struct { x, y: int; half: Vector2; };
+
+spawn :: (floater: Floater, position: Vector2, $$text: string) -> *Floater {
     using state;
 
     new_floater := spawn(*floaters, floater);
@@ -37,16 +37,11 @@ spawn :: (floater: Floater, position: Vector2, text: string) -> *Floater {
 
     new_floater.position         = position;
     new_floater.initial_position = position;
-    new_floater.texture          = Simp.texture_create_render_target(Floater.TEXTURE_WIDTH, Floater.TEXTURE_HEIGHT, .RGBA8);
+    new_floater.text             = #ifx is_constant(text) then text else copy_string(text);
+    new_floater.text_is_constant = #run is_constant(text);
 
-    Simp.set_render_target(new_floater.texture);
+    make_floater_texture(new_floater);
 
-    font := assets.fonts[Font.FLOATER];
-    text_width := Simp.prepare_text(font, text);
-    text_pos := Vector2.{ Floater.TEXTURE_WIDTH/2.0 - text_width/2.0, Floater.TEXTURE_WIDTH/2.0 - font.character_height/2.0};
-    draw_prepared_text_outlined(font, xx text_pos.x, xx text_pos.y, new_floater.color, new_floater.outline);
-
-    Simp.set_render_target(window.handle);
 
     return new_floater;
 }
@@ -82,15 +77,31 @@ simulate_floater_behavior :: inline (dt: float) {
             it.opacity -= Floater.FADE_SPEED * dt;
             if it.opacity <= 0 {
                 free_texture(it);
+                free_text_if_needed(it);
                 despawn(it);
             }
         }
     }
 }
 
-free_texture :: inline (using floater: *Floater) { free(texture); }
+make_floater_texture :: (using floater: *Floater) {
+    if texture then free_texture(floater);
+    texture = Simp.texture_create_render_target(xx floater_texture_size.x, xx floater_texture_size.y, .RGBA8);
 
-reset_floaters :: () { for * state.floaters free_texture(it); }
+    Simp.set_render_target(texture);
+
+    font := assets.fonts[Font.FLOATER];
+    text_width := Simp.prepare_text(font, text);
+    text_pos := Vector2.{ floater_texture_size.x/2.0 - text_width/2.0, floater_texture_size.y/2.0 - font.character_height/2.0};
+    draw_prepared_text_outlined(font, xx text_pos.x, xx text_pos.y, color, outline);
+
+    Simp.set_render_target(window.handle);
+}
+
+free_texture        :: inline (using floater: *Floater) { free(texture); }
+free_text_if_needed :: inline (using floater: *Floater) { if !text_is_constant then free(text.data); }
+
+reset_floaters :: () { for * state.floaters { free_texture(it); free_text_if_needed(it); } }
 
 render :: (using floater: Floater) {
     if !is_on_screen(floater) then return;
@@ -98,8 +109,8 @@ render :: (using floater: Floater) {
     Simp.set_shader_for_images(texture);
 
     pos := to_screen_space(position);
-    p0 := pos - (TEXTURE_HALF_SIZE * scale);
-    p1 := pos + (TEXTURE_HALF_SIZE * scale);
+    p0 := pos - (floater_texture_size.half * scale);
+    p1 := pos + (floater_texture_size.half * scale);
 
     Simp.immediate_quad(p0.x, p0.y, p1.x, p1.y, .{1,1,1, opacity});
 }

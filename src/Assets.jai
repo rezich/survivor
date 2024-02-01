@@ -30,4 +30,6 @@ load_fonts :: () {
         fonts[it_index] = Simp.get_font_at_size(".", "assets/fonts/OpenSans-BoldItalic.ttf", font_size); 
         assert(!!fonts[it_index]);
     }
+
+    on_reload_fonts();
 }

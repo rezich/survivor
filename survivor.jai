@@ -8,7 +8,6 @@ TODO:
   - massively clean up HUD text rendering
   - weapon acquisition/upgrade system
   - add the rest of the HUD
-  - figure out what to do about Floater textures being too small on high-res (4k) displays
   - add camera zoom, and set default zoom automatically based on window size
   - add a decent, reasonably competent framerate controller
   - figure out how to do collision sweeps for projectiles, player, enemies
@@ -258,6 +257,16 @@ render :: () {
     end_rendering();
 }
 
+
+
+
+on_reload_fonts :: () {
+    font := assets.fonts[Font.FLOATER];
+    assert(font != null);
+    x := Simp.prepare_text(font, "WWWWWWWWWW");
+    y := font.character_height;
+    floater_texture_size = .{ x, y, .{ x/2.0, y/2.0 } };
+}
 
 
 
