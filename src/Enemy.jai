@@ -53,7 +53,9 @@ hurt :: (using,except(damage, invulnerability) enemy: *Enemy, damage: int, proje
 }
 
 kill :: (using enemy: *Enemy) {
-    spawn(ifx random_get() % 100 then PICKUP_COIN else PICKUP_COIN_PILE, position);
+    //spawn(ifx random_get() % 100 then PICKUP_COIN else PICKUP_COIN_PILE, position);
+    if random_get() % 100 == 0 then spawn(PICKUP_COIN_PILE, position);
+    spawn(PICKUP_EXPERIENCE_ORB, position);
     deinit(*enemy.invulnerability_to_projectiles);
     despawn(enemy);
     state.player.kills += 1;

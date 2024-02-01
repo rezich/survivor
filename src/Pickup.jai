@@ -3,13 +3,14 @@ Pickup :: struct {
     sprite:           Sprite;
 
     status:           enum       { PLOPPING; IDLE; SWOOPING; FOLLOWING_PLAYER; };
-    flags:            enum_flags { PICK_UP_ALL_GOLD_IN_STAGE; }
+    flags:            enum_flags { PICK_UP_ALL_GOLD_AND_EXPERIENCE_IN_STAGE; }
 
     radius_intended:  float;
     swoop_target:     Vector2;
 
     experience:       int;
     gold:             int;
+    health:           int;
 
     MAXIMUM :: 10_000;
     SPEED   :: PICKUP_SPEED;
@@ -42,8 +43,9 @@ pick_up :: (using pickup: *Pickup) {
 
     player.gold       += gold;
     player.experience += experience;
+    if health then heal_player(health);
 
-    if flags & .PICK_UP_ALL_GOLD_IN_STAGE for * pickups if (it.status == .PLOPPING || it.status == .IDLE) && it.gold > 0 then begin_magnetizing(it);
+    if flags & .PICK_UP_ALL_GOLD_AND_EXPERIENCE_IN_STAGE then for * pickups if (it.status == .PLOPPING || it.status == .IDLE) && (it.gold > 0 || it.experience > 0) then begin_magnetizing(it);
 
     despawn(pickup);
 }

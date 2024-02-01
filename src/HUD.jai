@@ -7,7 +7,7 @@ simulate_hud :: (dt: float) {
 
     health_value_color_speed := ifx health_value_color_is_flashing then 60.0 else 20.0;
 
-    health_value_color = ease_color(health_value_color, ifx health_value_color_is_flashing then Vector4.{1,0,0,1} else get_health_color(player.health, player.health_max), health_value_color_speed * dt);
+    health_value_color = ease_color(health_value_color, ifx health_value_color_is_flashing then ifx most_recent_health_change == .HURT then Vector4.{1,0,0,1} else Vector4.{0,1,0,1} else get_health_color(player.health, player.health_max), health_value_color_speed * dt);
     health_value_outline_color = ease_color(health_value_outline_color, ifx health_value_color_is_flashing then Vector4.{1,1,1,1} else .{0,0,0,1}, health_value_color_speed * dt);
 }
 

@@ -16,6 +16,9 @@ Sprite :: enum {
     EXPERIENCE_ORB;
     COIN;
     COIN_PILE;
+    CHICKEN;
+
+    LAMP;
 }
 
 SPRITE_COLOR_CODE :: #code {
@@ -35,6 +38,9 @@ SPRITE_COLOR_CODE :: #code {
         case .EXPERIENCE_ORB; color = .{ 0, 1, 1, 1};
         case .COIN;           color = .{ 1, 1, 0, 1};
         case .COIN_PILE;      color = .{.5,.5, 0, 1};
+        case .CHICKEN;        color = .{ 0,.5, 0, 1};
+
+        case .LAMP;           color = .{ 1,.5, 0, 1};
     }
 }
 
@@ -78,7 +84,7 @@ PLAYER_INITIAL_WEAPONS      :: Held_Weapon.[
 
 PLAYER_CHARACTER :: Character.{
     health = 100,
-    speed  = 50
+    speed  = 100
 };
 
 PLAYER_ENTITY :: Entity.{
@@ -151,6 +157,13 @@ STAGE_SECONDS_BETWEEN_WAVES :: 10;
 
 STAGE_FIRST :: Stage.{
     background = .{ .30, .33, .37, 1 },
+    destructibles = .{
+        chance        = 0.2,
+        maximum       = 10,
+        destructibles = .[
+            DESTRUCTIBLE_LAMP
+        ]
+    },
     waves      = .[.{
 
         minimum  = 15,
@@ -270,7 +283,7 @@ PROJECTILE_PULSE :: Projectile.{
 
 PICKUP_SPEED               :: 140;
 
-PICKUP_PLOP_SPEED          :: 6.0;
+PICKUP_PLOP_SPEED          :: 20.0;
 
 PICKUP_VIBRATION_RANGE     :: 19;
 PICKUP_VIBRATION_INTENSITY :: 0.07;
@@ -288,14 +301,33 @@ PICKUP_COIN :: Pickup.{
 PICKUP_COIN_PILE :: Pickup.{
     sprite     = .COIN_PILE,
     radius     = 8,
-    gold       = 10,
-    flags      = .PICK_UP_ALL_GOLD_IN_STAGE
+    gold       = 0, // not much of a coin pile...
+    flags      = .PICK_UP_ALL_GOLD_AND_EXPERIENCE_IN_STAGE
 };
 
 PICKUP_EXPERIENCE_ORB :: Pickup.{
     sprite     = .EXPERIENCE_ORB,
-    radius     = 6,
+    radius     = 3,
     experience = 1
+};
+
+PICKUP_CHICKEN :: Pickup.{
+    sprite     = .CHICKEN,
+    radius     = 10,
+    health     = 25
+};
+
+
+
+
+// destructible
+
+DESTRUCTIBLE_SPAWN_OFFSET_RANGE  :: 0;
+DESTRUCTIBLE_TIME_BETWEEN_SPAWNS :: 1.0;
+
+DESTRUCTIBLE_LAMP :: Destructible.{
+    sprite = .LAMP,
+    radius = 10
 };
 
 
@@ -331,6 +363,14 @@ FLOATER_ENEMY_IMMUNE :: Floater.{
 FLOATER_PLAYER_DAMAGE :: Floater.{
     color          = .{ 1, 0, 0, 1},
     outline        = .{ 1,.8,.8, 1},
+    float_style    = .LINEAR,
+    float_speed    = 52,
+    float_distance = 20
+};
+
+FLOATER_PLAYER_HEAL :: Floater.{
+    color          = .{ 0, 1, 0, 1},
+    outline        = .{.8, 1,.8, 1},
     float_style    = .LINEAR,
     float_speed    = 52,
     float_distance = 20

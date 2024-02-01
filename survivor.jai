@@ -29,15 +29,17 @@ Character :: struct {
 
 
 state: struct {
-    enemies:     Entities(Enemy);
-    projectiles: Entities(Projectile);
-    pickups:     Entities(Pickup);
-    floaters:    Entities(Floater);
+    enemies:       Entities(Enemy);
+    projectiles:   Entities(Projectile);
+    pickups:       Entities(Pickup);
+    destructibles: Entities(Destructible);
+    floaters:      Entities(Floater);
 
-    stage:       struct {
-        using stage:           Stage = STAGE_FIRST;
-        current_wave:          int;
-        time_until_next_spawn: float;
+    stage: struct {
+        using stage:                        Stage = STAGE_FIRST;
+        current_wave:                       int;
+        time_until_next_enemy_spawn:        float;
+        time_until_next_destructible_spawn: float;
     }
 
     player: struct {
@@ -73,6 +75,7 @@ state: struct {
 
         // debug
         is_hurting_player:              bool;
+        is_spawning_chicken:            bool;
     }
 
     camera: struct {
@@ -87,6 +90,7 @@ state: struct {
         health_shake_amount:        float;
         health_value_color:         Vector4;
         health_value_outline_color: Vector4;
+        most_recent_health_change:  enum { HURT; HEAL; }
     }
 
     time: float;
@@ -103,10 +107,24 @@ hurt_player :: (enemy_id: u64, damage: int, invulnerability: float) {
 
     player.health -= damage;
 
+    hud.most_recent_health_change = .HURT;
     hud.health_shake_amount += 5.0 * damage;
     Clamp(*hud.health_shake_amount, 10.0, 50.0);
 
     spawn(FLOATER_PLAYER_DAMAGE, player.position, damage);
+}
+
+heal_player :: (health: int) {
+    using state;
+
+    previous_health := player.health;
+    player.health = min(player.health + health, player.health_max);
+
+    hud.most_recent_health_change = .HEAL;
+    hud.health_shake_amount += 5.0 * health;
+    Clamp(*hud.health_shake_amount, 10.0, 50.0);
+
+    spawn(FLOATER_PLAYER_HEAL, player.position, player.health - previous_health);
 }
 
 simulate_player :: (dt: float) {
@@ -123,7 +141,8 @@ simulate_player :: (dt: float) {
         if it.* <= 0 then remove it;
     }
 
-    if input.is_hurting_player then hurt_player(U64_MAX, xx (random_get() % 30), 0);
+    if input.is_hurting_player    then hurt_player(U64_MAX, xx (random_get() % 30), 0);
+    if input.is_spawning_chicken  then spawn(PICKUP_CHICKEN, player.position + .{100,0});
 }
 
 
@@ -159,6 +178,7 @@ INPUT_HANDLING_CODE :: #code {
     is_restarting                  = is_pressed(.F5);
 
     is_hurting_player              = is_pressed(.F1);
+    is_spawning_chicken            = is_pressed(.F2);
 };
 
 
@@ -202,10 +222,11 @@ simulate :: (dt: float) {
 
 
     // simulate entities
-    simulate_enemy\       _behavior(dt);
-    simulate_pickup\      _behavior(dt);
-    simulate_floater\     _behavior(dt);
-    simulate_projectile\  _behavior(dt);
+    simulate_enemy\      _behavior(dt);
+    simulate_pickup\     _behavior(dt);
+    simulate_floater\    _behavior(dt);
+    simulate_projectile\ _behavior(dt);
+    //simulate_destructible_behavior(dt);
 
 
     // move entities
@@ -217,7 +238,7 @@ simulate :: (dt: float) {
 
     // handle collisions
     simulate_collisions_between_player\    _and_pickups();
-    simulate_collisions_between_projectiles_and_enemies();
+    simulate_collisions_between_projectiles_and_enemies_and_destructibles();
     simulate_collisions_between_enemies\   _and_player ();
 
 
@@ -246,11 +267,12 @@ render :: () {
 
     { using stage.background; Simp.clear_render_target(x, y, z, w); }
 
-    for pickups     render(it);
-    for enemies     render(it);
-                    render(player);
-    for projectiles render(it);
-    for floaters    render(it);
+    for pickups       render(it);
+    for enemies       render(it);
+    for destructibles render(it);
+                      render(player);
+    for projectiles   render(it);
+    for floaters      render(it);
 
     render_hud();
 
@@ -303,6 +325,7 @@ main :: () {
 
 #load "src/Assets.jai";
 #load "src/Animation.jai";
+#load "src/Destructible.jai";
 #load "src/Enemy.jai";
 #load "src/Engine.jai";
 #load "src/Entity.jai";

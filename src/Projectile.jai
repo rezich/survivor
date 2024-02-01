@@ -37,7 +37,7 @@ simulate_projectile_behavior :: inline (dt: float) {
     }
 }
 
-simulate_collisions_between_projectiles_and_enemies :: inline () {
+simulate_collisions_between_projectiles_and_enemies_and_destructibles :: inline () {
     using state;
 
     for * projectile: projectiles {
@@ -54,6 +54,15 @@ simulate_collisions_between_projectiles_and_enemies :: inline () {
                 
                 hurt(enemy, projectile.damage, projectile.id, projectile.invulnerability);
                 //continue projectile;
+            }
+        }
+
+        for * destructible: destructibles {
+            they_will_collide := will_collide(projectile, destructible);
+            if they_will_collide {
+                if !(projectile.flags & .NOT_DESTROYED_UPON_COLLISION) then despawn(projectile);
+
+                destroy(destructible);
             }
         }
     }
