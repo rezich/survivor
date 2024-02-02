@@ -6,7 +6,7 @@ Enemy :: struct {
     damage: int;
     flags:  enum_flags { IMMUNE_TO_FIRE; }
 
-    invulnerability_to_projectiles: Table(u64, float);
+    invulnerability_to_projectiles: Table(Projectile.ID, float);
     invulnerability: float = 0.5; // bad name; invulnerability that's conferred to player on hit
 
     SPAWN_OFFSET_RANGE :: ENEMY_SPAWN_OFFSET_RANGE;
@@ -43,7 +43,7 @@ spawn_around_player :: (enemy: Enemy, count: int, distance: float) {
     }
 }
 
-hurt :: (using,except(damage, invulnerability) enemy: *Enemy, damage: int, projectile_id: u64, invulnerability: float) {
+hurt :: (using,except(damage, invulnerability) enemy: *Enemy, damage: int, projectile_id: Projectile.ID, invulnerability: float) {
     if table_contains(*enemy.invulnerability_to_projectiles, projectile_id) then return;
     if invulnerability then table_add(*enemy.invulnerability_to_projectiles, projectile_id, invulnerability);
 

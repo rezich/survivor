@@ -22,7 +22,7 @@ render_hud :: () {
         clock_pos = Vector2.{ HUD_PADDING, xx (window.height - font.character_height) };
         draw_prepared_text_outlined(font, xx clock_pos.x, xx clock_pos.y);
     }{
-        font := assets.fonts[Font.HUD_SMALL];
+        font := assets.fonts[Font.HUD_MEDIUM];
         text_width := Simp.prepare_text(font, tprint("Wave %0%", stage.current_wave+1, ifx stage.current_wave == stage.waves.count-1 then " (the last one for now—it goes on forever)"));
         stage_pos := clock_pos - Vector2.{ 0, xx font.character_height };
         draw_prepared_text_outlined(font, xx stage_pos.x, xx stage_pos.y);
@@ -52,7 +52,7 @@ render_hud :: () {
 
     experience_top: int;
     {
-        font := assets.fonts[Font.HUD_SMALL];
+        font := assets.fonts[Font.HUD_MEDIUM];
         text_width := Simp.prepare_text(font, "Experience: ");
         experience_pos := Vector2.{ HUD_PADDING, xx health_top};
         experience_top = font.character_height + xx experience_pos.y;
@@ -66,7 +66,7 @@ render_hud :: () {
 
     gold_top: int;
     {
-        font := assets.fonts[Font.HUD_SMALL];
+        font := assets.fonts[Font.HUD_MEDIUM];
         text_width := Simp.prepare_text(font, "Gold: ");
         gold_pos := Vector2.{ HUD_PADDING, xx experience_top};
         gold_top = font.character_height + xx gold_pos.y;
@@ -80,7 +80,7 @@ render_hud :: () {
 
     kills_top: int;
     {
-        font := assets.fonts[Font.HUD_SMALL];
+        font := assets.fonts[Font.HUD_MEDIUM];
         text_width := Simp.prepare_text(font, "Kills: ");
         kills_pos := Vector2.{ HUD_PADDING, xx gold_top};
         kills_top = font.character_height + xx kills_pos.y;
@@ -92,7 +92,19 @@ render_hud :: () {
         draw_prepared_text_outlined(font, xx kills_value_pos.x, xx kills_value_pos.y);
     }
     
-    
+    weapon_font       := assets.fonts[Font.HUD_TINY];
+    weapon_height     := weapon_font.character_height;
+    weapons_top       := window.height / 2 - (player.weapons.count * weapon_font.character_height) / 2;
+    weapons_max_width := 0;
+    for player.weapons weapons_max_width = max(weapons_max_width, Simp.prepare_text(weapon_font, tprint("%  ", it.name)));
+    for player.weapons {
+        y := weapons_top + weapon_height * it_index;
+        text_width := Simp.prepare_text(weapon_font, it.name);
+        draw_prepared_text_outlined(weapon_font, HUD_PADDING, y);
+
+        text_width = Simp.prepare_text(weapon_font, tprint("Lv. %/%", it.level+1, it.upgrades.count+1));
+        draw_prepared_text_outlined(weapon_font, HUD_PADDING + weapons_max_width, y);
+    }
 }
 
 get_health_color :: (health: int, max_health: int) -> Vector4 {

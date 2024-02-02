@@ -1,5 +1,6 @@
 Entity :: struct {
-    id:        u64;
+    ID :: #type,distinct u64;
+    id:        ID;
     is_dead:   bool;
     position:  Vector2;
     velocity:  Vector2;
@@ -71,7 +72,7 @@ Entities :: struct(T: Type) #modify {
 } {
     entities: [T.MAXIMUM] T;
     count:    int;
-    next_id:  u64;
+    next_id:  T.ID;
 }
 
 spawn :: (using holder: *$T/Entities, entity: T.T) -> *T.T {

@@ -62,7 +62,7 @@ state: struct {
         kills:         int;
         experience:    int;
 
-        invulnerability_to_enemies: Table(u64, float);
+        invulnerability_to_enemies: Table(Enemy.ID, float);
     }
 
     input: struct {
@@ -107,7 +107,7 @@ state: struct {
     is_exiting:   bool;
 }
 
-hurt_player :: (enemy_id: u64, damage: int, invulnerability: float) {
+hurt_player :: (enemy_id: Enemy.ID, damage: int, invulnerability: float) {
     using state;
 
     if table_contains(*player.invulnerability_to_enemies, enemy_id) then return;

@@ -1,6 +1,6 @@
 Destructible :: struct {
     using #as entity: Entity;
-    sprite: Sprite;
+    sprite:           Sprite;
 
     MAXIMUM :: 100;
 

@@ -1,19 +1,32 @@
 Weapon :: struct {
-    name:                 string;
-    projectile:           Projectile;
-    projectiles_per_shot: int;
-    shot_pattern:         enum { RADIAL; AIM_AT_NEAREST_ENEMY; };
-    shot_cooldown:        float;
-    upgrades:             [] struct {
+    Stats :: struct {
+        projectiles_per_shot: int;
+        shot_cooldown:        float;
+    }
 
-    };
+    name:         string;
+    projectile:   Projectile;
+    using stats:  Stats;
+    shot_pattern: enum { RADIAL; AIM_AT_NEAREST_ENEMY; };
+    
+    upgrades:     [] Stats;
 
-    level:                int;
+    level:         int;
 }
 
 Held_Weapon :: struct {
     using weapon: Weapon;
     next_shot:    float;
+}
+
+upgrade :: (using weapon: *Weapon) {
+    assert(level < upgrades.count-1);
+    upgrade := upgrades[level+1];
+
+    projectiles_per_shot += upgrade.projectiles_per_shot;
+    shot_cooldown        += upgrade.shot_cooldown;
+
+    level += 1;
 }
 
 simulate_player_weapon_behavior :: inline () {
@@ -30,7 +43,6 @@ simulate_player_weapon_behavior :: inline () {
 
     for * player.weapons {
         if time >= it.next_shot {
-            
             if #complete it.shot_pattern == {
 
             case .RADIAL;

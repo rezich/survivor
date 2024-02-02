@@ -1,7 +1,9 @@
 FONTS :: struct { name: string; size_denominator: int; }.[
-    .{ "FLOATER"   , 48 },
-    .{ "HUD_LARGE" , 16 },
-    .{ "HUD_SMALL" , 24 },
+    .{ "FLOATER"    , 48 },
+    .{ "HUD_LARGE"  , 16 },
+    .{ "HUD_MEDIUM" , 24 },
+    .{ "HUD_SMALL"  , 36 },
+    .{ "HUD_TINY"   , 48 }
 ];
 
 #insert -> string {
