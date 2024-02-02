@@ -88,6 +88,8 @@ handle_input :: inline () {
         }
     }
 
+    is_suspended = settings.suspend_when_out_of_focus && !Input.input_application_has_focus;
+
     #insert,scope() INPUT_HANDLING_CODE;
 }
 

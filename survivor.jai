@@ -28,6 +28,13 @@ Character :: struct {
 
 
 
+settings: struct {
+    suspend_when_out_of_focus := true;
+};
+
+
+
+
 state: struct {
     enemies:       Entities(Enemy);
     projectiles:   Entities(Projectile);
@@ -95,8 +102,9 @@ state: struct {
 
     time: float;
 
-    is_paused:  bool;
-    is_exiting: bool;
+    is_paused:    bool;
+    is_suspended: bool;
+    is_exiting:   bool;
 }
 
 hurt_player :: (enemy_id: u64, damage: int, invulnerability: float) {
@@ -190,9 +198,9 @@ simulate :: (dt: float) {
     // handle fullscreen toggle
     if input.is_toggling_fullscreen then toggle_fullscreen();
 
-    // skip rest of simulation if paused, otherwise update game time
+    // skip rest of simulation if paused or suspended, otherwise update game time
     if input.is_toggling_pause then is_paused = !is_paused;
-    if is_paused then return;
+    if is_paused || is_suspended then return;
     time += dt;
 
 
@@ -261,9 +269,11 @@ simulate :: (dt: float) {
 
 
 render :: () {
-    begin_rendering();
-
     using state;
+
+    if is_suspended then return;
+
+    begin_rendering();
 
     { using stage.background; Simp.clear_render_target(x, y, z, w); }
 
@@ -337,4 +347,13 @@ main :: () {
 #load "src/Util.jai";
 #load "src/Weapon.jai";
 
-#load "design.jai";
+#load "content/Destructibles.jai";
+#load "content/Enemies.jai";
+#load "content/Fonts.jai";
+#load "content/Floaters.jai";
+#load "content/Pickups.jai";
+#load "content/Player.jai";
+#load "content/Projectiles.jai";
+#load "content/Sprites.jai";
+#load "content/Stages.jai";
+#load "content/Weapons.jai";

@@ -1,8 +1,14 @@
 Weapon :: struct {
+    name:                 string;
     projectile:           Projectile;
     projectiles_per_shot: int;
     shot_pattern:         enum { RADIAL; AIM_AT_NEAREST_ENEMY; };
     shot_cooldown:        float;
+    upgrades:             [] struct {
+
+    };
+
+    level:                int;
 }
 
 Held_Weapon :: struct {
