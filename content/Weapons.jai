@@ -3,7 +3,24 @@ WEAPON_SPREADSHOT :: Weapon.{
     projectile           = PROJECTILE_BULLET,
     projectiles_per_shot = 8,
     shot_pattern         = .RADIAL,
-    shot_cooldown        = 0.66
+    shot_cooldown        = 0.66,
+    upgrades             = .[.{
+
+        projectiles_per_shot = 1
+
+    }, .{
+
+        projectiles_per_shot = 2
+
+    }, .{
+
+        projectiles_per_shot = 1
+
+    }, .{
+
+        projectiles_per_shot = 1
+
+    }]
 };
 
 WEAPON_PULSE :: Weapon.{

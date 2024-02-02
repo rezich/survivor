@@ -29,6 +29,10 @@ upgrade :: (using weapon: *Weapon) {
     level += 1;
 }
 
+upgrade_random_weapon_if_possible :: () {
+    using state;
+}
+
 simulate_player_weapon_behavior :: inline () {
     using state;
 

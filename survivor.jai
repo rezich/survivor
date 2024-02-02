@@ -61,6 +61,9 @@ state: struct {
         gold:          int;
         kills:         int;
         experience:    int;
+        level:         int;
+
+        experience_to_level_up: int = 5;
 
         invulnerability_to_enemies: Table(Enemy.ID, float);
     }
@@ -138,6 +141,8 @@ heal_player :: (health: int) {
 simulate_player :: (dt: float) {
     using state;
 
+    if player.experience >= player.experience_to_level_up then level_up_player();
+
     if input.is_player_moving_toward_cursor {
         toward_cursor := input.cursor_position.world - player.position;
         normalize(*toward_cursor);
@@ -152,6 +157,35 @@ simulate_player :: (dt: float) {
     if input.is_hurting_player    then hurt_player(U64_MAX, xx (random_get() % 30), 0);
     if input.is_spawning_chicken  then spawn(PICKUP_CHICKEN, player.position + .{100,0});
 }
+
+get_experience_required_to_level_up_player :: () -> int {
+    get_experience_required_for_level_after :: (level: int) -> int {
+        experience := 5;
+
+        experience += min(level,    20) * 10;
+        if level <= 20 then return experience;
+
+        experience += min(level-20, 40) * 13;
+        if level <= 40 then return experience;
+
+        experience +=    (level-40    ) * 16;
+        return experience;
+    }
+
+    using state.player;
+
+    experience_needed := 0;
+    for 0..level experience_needed += get_experience_required_for_level_after(it);
+    return experience_needed;
+}
+
+level_up_player :: () {
+    using state.player;
+    level += 1;
+    experience_to_level_up = get_experience_required_to_level_up_player();
+}
+
+
 
 
 

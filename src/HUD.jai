@@ -59,16 +59,29 @@ render_hud :: () {
         draw_prepared_text_outlined(font, xx experience_pos.x, xx experience_pos.y, .{.9,.9,.9,1});
 
         experience_right := experience_pos.x + text_width;
-        text_width = Simp.prepare_text(font, tprint("%", player.experience));
+        text_width = Simp.prepare_text(font, tprint("%/%", player.experience, player.experience_to_level_up));
         experience_value_pos := Vector2.{ experience_right, experience_pos.y };
         draw_prepared_text_outlined(font, xx experience_value_pos.x, xx experience_value_pos.y);
+    }
+
+    level_top: int;
+    {
+        font := assets.fonts[Font.HUD_LARGE];
+        text_width := Simp.prepare_text(font, "Level: ");
+        pos := Vector2.{ HUD_PADDING, xx experience_top };
+        level_top = font.character_height + xx pos.y;
+        draw_prepared_text_outlined(font, xx pos.x, xx pos.y, .{.9,.9,.9,1});
+
+        pos.x += text_width;
+        text_width = Simp.prepare_text(font, tprint("%", player.level+1));
+        draw_prepared_text_outlined(font, xx pos.x, xx pos.y);
     }
 
     gold_top: int;
     {
         font := assets.fonts[Font.HUD_MEDIUM];
         text_width := Simp.prepare_text(font, "Gold: ");
-        gold_pos := Vector2.{ HUD_PADDING, xx experience_top};
+        gold_pos := Vector2.{ HUD_PADDING, xx level_top};
         gold_top = font.character_height + xx gold_pos.y;
         draw_prepared_text_outlined(font, xx gold_pos.x, xx gold_pos.y, .{.9,.9,.9,1});
 
