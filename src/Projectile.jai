@@ -1,3 +1,24 @@
+PROJECTILE_BULLET :: Projectile.{
+    sprite = .BULLET,
+    radius = 4,
+    damage = 10,
+    speed  = 200,
+    growth = 2,
+    flags  = .IS_FIRE
+};
+PROJECTILE_PULSE :: Projectile.{
+    sprite = .PULSE_WAVE,
+    radius = 32,
+    damage = 1,
+    speed  = 0,
+    growth = 64,
+    life   = 0.5,
+    flags  = .FOLLOWS_PLAYER | .NOT_DESTROYED_UPON_COLLISION
+};
+
+
+
+
 Projectile :: struct {
     using #as entity: Entity;
     sprite:           Sprite;
@@ -25,7 +46,6 @@ spawn :: (projectile: Projectile, position: Vector2, direction: Vector2) -> *Pro
 
     return new_projectile;
 }
-
 simulate_projectile_behavior :: inline (dt: float) {
     using state;
 
@@ -36,7 +56,6 @@ simulate_projectile_behavior :: inline (dt: float) {
         if !is_on_screen(it) || it.radius <= 0 || it.life <= 0 then despawn(it);
     }
 }
-
 simulate_collisions_between_projectiles_and_enemies_and_destructibles :: inline () {
     using state;
 

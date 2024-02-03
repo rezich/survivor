@@ -7,6 +7,7 @@ window: struct {
     saved_info:           Saved_Window_Info;
     is_fullscreen:        bool;
 }
+engine_time: Apollo_Time;
 
 init_engine :: inline (window_title: string) {
     #if OS == .WINDOWS {
@@ -22,31 +23,24 @@ init_engine :: inline (window_title: string) {
 
     engine_time = current_time_monotonic();
 }
-
-engine_time: Apollo_Time;
-
 advance_time :: inline () -> float {
     using state;
     prev_time := engine_time;
     engine_time = current_time_monotonic();
     return cast(float) to_float64_seconds(engine_time - prev_time);
 }
-
 begin_rendering :: inline () {
     Simp.set_shader_for_color(enable_blend = true);
     Simp.immediate_begin();
 }
-
 end_rendering :: inline () {
     Simp.immediate_flush();
     Simp.swap_buffers(window.handle);
 }
-
 recalculate_window :: () {
     window.half_size = .{ xx window.width, xx window.height } * .5;
     window.pythagorean_distance = sqrt(window.half_size.x*window.half_size.x + window.half_size.y*window.half_size.y);
 }
-
 handle_input :: inline () {
     is_held     :: inline (key: Input.Key_Code) -> bool         { return xx (Input.input_button_states[key] & .DOWN);       }
     is_pressed  :: inline (key: Input.Key_Code) -> bool #expand { return `received[key] &&  `pressed[key] && !`repeat[key]; }
@@ -92,7 +86,6 @@ handle_input :: inline () {
 
     #insert,scope() INPUT_HANDLING_CODE;
 }
-
 toggle_fullscreen :: () {
     using window;
     success := toggle_fullscreen(handle, !is_fullscreen, *saved_info);
@@ -111,8 +104,6 @@ toggle_fullscreen :: () {
     WR :: #import "Windows_Resources";
     WR.disable_runtime_console();
 }
-
-
 
 
 DEBUG_MEMORY :: BUILD == .DEBUG;

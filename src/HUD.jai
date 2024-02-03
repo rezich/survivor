@@ -1,4 +1,24 @@
+Hud :: struct {
+    health_shake_amount:        float;
+    health_value_color:         Vector4;
+    health_value_outline_color: Vector4;
+    most_recent_health_change:  enum { HURT; HEAL; }
+}
+
 simulate_hud :: (dt: float) {
+    get_health_color :: (health: int, max_health: int) -> Vector4 {
+        WHITE  :: Vector4.{ 1, 1, 1,1};
+        YELLOW :: Vector4.{ 1, 1, 0,1};
+        RED    :: Vector4.{ 1, 0, 0,1};
+        MAROON :: Vector4.{.5, 0, 0,1};
+
+        ratio := cast(float) health / cast(float) max_health;
+
+        if ratio > 0.5  then return ease_color(YELLOW, WHITE , (ratio - 0.5) * 2.0);
+        if ratio > 0.25 then return ease_color(RED   , YELLOW,  ratio        * 2.0);
+                            return ease_color(MAROON, RED   ,  ratio        * 4.0);
+    }
+
     using state; using state.hud;
 
     health_shake_amount = ifx is_approximately_zero(health_shake_amount, 1) then 0 else ease(health_shake_amount, 0, 10.0 * dt);
@@ -10,7 +30,6 @@ simulate_hud :: (dt: float) {
     health_value_color = ease_color(health_value_color, ifx health_value_color_is_flashing then ifx most_recent_health_change == .HURT then Vector4.{1,0,0,1} else Vector4.{0,1,0,1} else get_health_color(player.health, player.health_max), health_value_color_speed * dt);
     health_value_outline_color = ease_color(health_value_outline_color, ifx health_value_color_is_flashing then Vector4.{1,1,1,1} else .{0,0,0,1}, health_value_color_speed * dt);
 }
-
 render_hud :: () {
     using state;
 
@@ -118,17 +137,4 @@ render_hud :: () {
         text_width = Simp.prepare_text(weapon_font, tprint("Lv. %/%", it.level+1, it.upgrades.count+1));
         draw_prepared_text_outlined(weapon_font, HUD_PADDING + weapons_max_width, y);
     }
-}
-
-get_health_color :: (health: int, max_health: int) -> Vector4 {
-    WHITE  :: Vector4.{ 1, 1, 1,1};
-    YELLOW :: Vector4.{ 1, 1, 0,1};
-    RED    :: Vector4.{ 1, 0, 0,1};
-    MAROON :: Vector4.{.5, 0, 0,1};
-
-    ratio := cast(float) health / cast(float) max_health;
-
-    if ratio > 0.5  then return ease_color(YELLOW, WHITE , (ratio - 0.5) * 2.0);
-    if ratio > 0.25 then return ease_color(RED   , YELLOW,  ratio        * 2.0);
-                         return ease_color(MAROON, RED   ,  ratio        * 4.0);
 }

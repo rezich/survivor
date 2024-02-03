@@ -1,3 +1,44 @@
+FLOATER_FADE_SPEED :: 1.5;
+
+FLOATER_SCALE_INITIAL                     :: Vector2.{ 0.5, 2.0 };
+FLOATER_SCALE_SPEED_INITIAL_TO_STRETCHED  :: 30.0;
+FLOATER_SCALE_STRETCHED                   :: Vector2.{ 1.8, 0.5 };
+FLOATER_SCALE_SPEED_STRETCHED_TO_SQUISHED :: 20.0;
+FLOATER_SCALE_SQUISHED                    :: Vector2.{ 1.0, 1.0 };
+
+
+FLOATER_ENEMY_DAMAGE :: Floater.{
+    color          = .{ 1, 1, 1, 1},
+    outline        = .{ 0, 0, 0, 1},
+    float_style    = .LINEAR,
+    float_speed    = 52,
+    float_distance = 20
+};
+FLOATER_ENEMY_IMMUNE :: Floater.{
+    color          = .{.7,.7,.7, 1},
+    outline        = .{.1,.1,.1, 1},
+    float_style    = .EASED,
+    float_speed    = 20,
+    float_distance = 16
+};
+FLOATER_PLAYER_DAMAGE :: Floater.{
+    color          = .{ 1, 0, 0, 1},
+    outline        = .{ 1,.8,.8, 1},
+    float_style    = .LINEAR,
+    float_speed    = 52,
+    float_distance = 20
+};
+FLOATER_PLAYER_HEAL :: Floater.{
+    color          = .{ 0, 1, 0, 1},
+    outline        = .{.8, 1,.8, 1},
+    float_style    = .LINEAR,
+    float_speed    = 52,
+    float_distance = 20
+};
+
+
+
+
 Floater :: struct {
     using #as entity: Entity;
 
@@ -45,11 +86,9 @@ spawn :: (floater: Floater, position: Vector2, $$text: string) -> *Floater {
 
     return new_floater;
 }
-
 spawn :: (floater: Floater, position: Vector2, number: int) -> *Floater {
     return spawn(floater, position, tprint("%", number));
 }
-
 simulate_floater_behavior :: inline (dt: float) {
     using state;
 
@@ -83,7 +122,6 @@ simulate_floater_behavior :: inline (dt: float) {
         }
     }
 }
-
 make_floater_texture :: (using floater: *Floater) {
     if texture then free_texture(floater);
     texture = Simp.texture_create_render_target(xx floater_texture_size.x, xx floater_texture_size.y, .RGBA8);
@@ -97,12 +135,6 @@ make_floater_texture :: (using floater: *Floater) {
 
     Simp.set_render_target(window.handle);
 }
-
-free_texture        :: inline (using floater: *Floater) { free(texture); }
-free_text_if_needed :: inline (using floater: *Floater) { if !text_is_constant then free(text.data); }
-
-reset_floaters :: () { for * state.floaters { free_texture(it); free_text_if_needed(it); } }
-
 render :: (using floater: Floater) {
     if !is_on_screen(floater) then return;
 
@@ -114,6 +146,10 @@ render :: (using floater: Floater) {
 
     Simp.immediate_quad(p0.x, p0.y, p1.x, p1.y, .{1,1,1, opacity});
 }
+
+free_texture        :: inline (using floater: *Floater) { free(texture); }
+free_text_if_needed :: inline (using floater: *Floater) { if !text_is_constant then free(text.data); }
+reset_floaters :: () { for * state.floaters { free_texture(it); free_text_if_needed(it); } }
 
 /*
 

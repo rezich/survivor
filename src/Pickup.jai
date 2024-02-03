@@ -1,3 +1,39 @@
+PICKUP_SPEED               :: 140;
+
+PICKUP_PLOP_SPEED          :: 20.0;
+
+PICKUP_VIBRATION_RANGE     :: 19;
+PICKUP_VIBRATION_INTENSITY :: 0.07;
+
+PICKUP_SWOOP_DISTANCE      :: 32;
+PICKUP_SWOOP_SPEED         :: 12;
+
+
+PICKUP_COIN :: Pickup.{
+    sprite     = .COIN,
+    radius     = 4,
+    gold       = 1
+};
+PICKUP_COIN_PILE :: Pickup.{
+    sprite     = .COIN_PILE,
+    radius     = 8,
+    gold       = 0, // not much of a coin pile...
+    flags      = .PICK_UP_ALL_GOLD_AND_EXPERIENCE_IN_STAGE
+};
+PICKUP_EXPERIENCE_ORB :: Pickup.{
+    sprite     = .EXPERIENCE_ORB,
+    radius     = 3,
+    experience = 1
+};
+PICKUP_CHICKEN :: Pickup.{
+    sprite     = .CHICKEN,
+    radius     = 10,
+    health     = 25
+};
+
+
+
+
 Pickup :: struct {
     using #as entity: Entity;
     sprite:           Sprite;
@@ -37,7 +73,6 @@ spawn :: (pickup: Pickup, position: Vector2) -> *Pickup {
 
     return new_pickup;
 }
-
 pick_up :: (using pickup: *Pickup) {
     using state;
 
@@ -49,7 +84,6 @@ pick_up :: (using pickup: *Pickup) {
 
     despawn(pickup);
 }
-
 begin_magnetizing :: (using pickup: *Pickup) {
     pickup.radius = pickup.radius_intended; // kinda a hack
     pickup.status = .SWOOPING;
@@ -57,7 +91,6 @@ begin_magnetizing :: (using pickup: *Pickup) {
     normalize(*away_from_player);
     pickup.swoop_target = pickup.position + away_from_player * Pickup.SWOOP_DISTANCE;
 }
-
 simulate_pickup_behavior :: inline (dt: float) {
     using state;
 
@@ -93,7 +126,6 @@ simulate_pickup_behavior :: inline (dt: float) {
         }
     }
 }
-
 simulate_collisions_between_player_and_pickups :: inline () {
     using state;
 

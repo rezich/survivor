@@ -1,7 +1,0 @@
-DESTRUCTIBLE_SPAWN_OFFSET_RANGE  :: 0;
-DESTRUCTIBLE_TIME_BETWEEN_SPAWNS :: 1.0;
-
-DESTRUCTIBLE_LAMP :: Destructible.{
-    sprite = .LAMP,
-    radius = 10
-};

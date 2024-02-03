@@ -1,3 +1,53 @@
+ENEMY_SPAWN_OFFSET_RANGE :: 4;
+
+
+ENEMY_SPIDER :: Enemy.{
+    sprite = .SPIDER,
+    radius = 10,
+    speed  = 25,
+    health = 1,
+    damage = 1
+};
+ENEMY_ZOMBIE :: Enemy.{
+    sprite = .ZOMBIE,
+    radius = 12,
+    speed  = 20,
+    health = 2,
+    damage = 1
+};
+ENEMY_BAT :: Enemy.{
+    sprite = .BAT,
+    radius = 6,
+    speed  = 25,
+    health = 1,
+    damage = 1
+};
+ENEMY_VAMPIRE :: Enemy.{
+    sprite = .VAMPIRE,
+    radius = 16,
+    speed  = 30,
+    health = 10,
+    damage = 2
+};
+ENEMY_GOBLIN :: Enemy.{
+    sprite = .GOBLIN,
+    radius = 8,
+    speed  = 40,
+    health = 4,
+    damage = 1,
+    flags  = .IMMUNE_TO_FIRE
+};
+ENEMY_SKELETON :: Enemy.{
+    sprite = .SKELETON,
+    radius = 12,
+    speed  = 30,
+    health = 10,
+    damage = 5
+};
+
+
+
+
 Enemy :: struct {
     using #as entity:    Entity;
     using #as character: Character;
@@ -27,7 +77,6 @@ spawn :: (enemy: Enemy, position: Vector2) -> *Enemy {
 
     return new_enemy;
 }
-
 spawn_somewhere_off_screen :: (enemy: Enemy) {
     theta       := random_get_within_range(0, TAU);
     offset      := random_get_within_range(0, Enemy.SPAWN_OFFSET_RANGE);
@@ -35,14 +84,12 @@ spawn_somewhere_off_screen :: (enemy: Enemy) {
     from_camera := Vector2.{cos(theta), sin(theta)} * distance;
     spawn(enemy, state.camera.position + from_camera);
 }
-
 spawn_around_player :: (enemy: Enemy, count: int, distance: float) {
     for 0..count-1 {
         theta := TAU / count * it;
         spawn(enemy, state.player.position + .{ cos(theta), sin(theta) } * distance);
     }
 }
-
 hurt :: (using,except(damage, invulnerability) enemy: *Enemy, damage: int, projectile_id: Projectile.ID, invulnerability: float) {
     if table_contains(*enemy.invulnerability_to_projectiles, projectile_id) then return;
     if invulnerability then table_add(*enemy.invulnerability_to_projectiles, projectile_id, invulnerability);
@@ -51,7 +98,6 @@ hurt :: (using,except(damage, invulnerability) enemy: *Enemy, damage: int, proje
     if health == 0 then kill(enemy);
     spawn(FLOATER_ENEMY_DAMAGE, position, damage);
 }
-
 kill :: (using enemy: *Enemy) {
     //spawn(ifx random_get() % 100 then PICKUP_COIN else PICKUP_COIN_PILE, position);
     if random_get() % 100 == 0 then spawn(PICKUP_COIN_PILE, position);
@@ -60,9 +106,9 @@ kill :: (using enemy: *Enemy) {
     despawn(enemy);
     state.player.kills += 1;
 }
-
-reset_enemies :: () { for * state.enemies deinit(*it.invulnerability_to_projectiles); }
-
+reset_enemies :: () {
+    for * state.enemies deinit(*it.invulnerability_to_projectiles);
+}
 simulate_enemy_behavior :: inline (dt: float) {
     using state;
 
@@ -76,7 +122,6 @@ simulate_enemy_behavior :: inline (dt: float) {
         it.velocity = toward_player * it.speed;
     }
 }
-
 simulate_collisions_between_enemies_and_player :: inline () {
     using state;
 

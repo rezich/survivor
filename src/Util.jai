@@ -8,12 +8,10 @@ get_closest_point_on_line :: (point: Vector2, line_begin: Vector2, line_end: Vec
     if det then return .{ (a1*c1 - b1*c2) / det, (a1*c2 - -b1*c1) / det };
     return point;
 }
-
 do_circles_overlap :: (a: Vector2, a_radius: float, b: Vector2, b_radius: float) -> bool, Vector2 {
     radii_sum := a_radius + b_radius;
     return abs(distance_squared(a, b)) <= radii_sum * radii_sum, .{}; //TODO: get point of overlap
 }
-
 do_line_segments_intersect :: (a_begin: Vector2, a_end: Vector2, b_begin: Vector2, b_end: Vector2) -> bool, Vector2 {
     s1 := Vector2.{ a_end.x - a_begin.x, a_end.y - a_begin.y };
     s2 := Vector2.{ b_end.x - b_begin.x, b_end.y - b_begin.y };
@@ -35,7 +33,6 @@ do_line_segments_intersect :: (a_begin: Vector2, a_end: Vector2, b_begin: Vector
     t := t_numer / denom;
     return true, .{ a_begin.x + (t * s1.x), a_begin.y + (t * s1.y) };
 }
-
 do_moving_circles_collide :: (a_begin: Vector2, a_end: Vector2, a_radius: float, b_begin: Vector2, b_end: Vector2, b_radius: float) -> bool, Vector2 {
     detected: bool;
     point: Vector2;
@@ -63,7 +60,6 @@ lerp_theta :: (a: float, b: float, t: float) -> float {
 atan2_between :: (a, b) => atan2(a.y-b.y, a.x-b.x);
 
 ease :: (x, target, speed) => x + (target - x) * speed;
-
 ease_color :: (x: Vector4, target: Vector4, speed: float) -> Vector4 { return .{
     ease(x.x, target.x, speed),
     ease(x.y, target.y, speed),

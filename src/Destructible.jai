@@ -1,3 +1,15 @@
+DESTRUCTIBLE_SPAWN_OFFSET_RANGE  :: 0;
+DESTRUCTIBLE_TIME_BETWEEN_SPAWNS :: 1.0;
+
+
+DESTRUCTIBLE_LAMP :: Destructible.{
+    sprite = .LAMP,
+    radius = 10
+};
+
+
+
+
 Destructible :: struct {
     using #as entity: Entity;
     sprite:           Sprite;
@@ -19,7 +31,6 @@ spawn :: (destructible: Destructible, position: Vector2) -> *Destructible {
 
     return new_destructible;
 }
-
 spawn_somewhere_off_screen :: (destructible: Destructible) {
     theta       := random_get_within_range(0, TAU);
     offset      := random_get_within_range(0, Destructible.SPAWN_OFFSET_RANGE);
@@ -27,7 +38,6 @@ spawn_somewhere_off_screen :: (destructible: Destructible) {
     from_camera := Vector2.{cos(theta), sin(theta)} * distance;
     spawn(destructible, state.camera.position + from_camera);
 }
-
 destroy :: (using destructible: *Destructible) {
     pickup := PICKUP_COIN;
     roll   := random_get_zero_to_one();
