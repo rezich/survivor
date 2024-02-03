@@ -71,18 +71,7 @@ state: struct {
         is_spawning_chicken:            bool;
     }
 
-    camera: struct {
-        position: Vector2;
-        scale:    float = 1.0;
-        rotation: float;
-
-        left, right, top, bottom: float;
-        matrix: Matrix3;
-        inverse_matrix: Matrix3;
-
-        half_size: Vector2;
-        pythagorean_distance: float; // this is a dumb name for this
-    }
+    camera: Camera;
 
     hud:  Hud;
 
@@ -137,34 +126,20 @@ simulate :: (dt: float) {
 
     // skip rest of simulation if paused or suspended, otherwise update game time
     if input.is_toggling_pause then is_paused = !is_paused;
-    if is_paused || is_suspended then return;
-    time += dt;
+    if is_suspended then return;
 
+    if !is_paused {
+        time += dt;
 
-    // simulate and move player
-    simulate_player(dt);
-    move(*player, dt);
+        // simulate and move player
+        simulate_player(dt);
+        move(*player, dt);
+    }
 
     // move camera
-    {
-        using camera;
+    move_camera();
 
-        position = player.position;
-
-        scale = window.scale_from_720;
-
-        matrix = make_transform_matrix(-position, .{scale, scale}, rotation);
-        inverse_matrix = inverse(matrix);
-
-        half_size = window.half_size / window.scale_from_720;
-
-        left   = position.x - half_size.x;
-        right  = position.x + half_size.x;
-        bottom = position.y - half_size.y;
-        top    = position.y + half_size.y;
-
-        pythagorean_distance = sqrt(half_size.x*half_size.x + half_size.y*half_size.y);
-    }
+    if is_paused then return;
 
 
     // simulate stage
@@ -181,7 +156,6 @@ simulate :: (dt: float) {
     simulate_pickup\     _behavior(dt);
     simulate_floater\    _behavior(dt);
     simulate_projectile\ _behavior(dt);
-    //simulate_destructible_behavior(dt);
 
 
     // move entities
@@ -217,7 +191,7 @@ simulate :: (dt: float) {
 render :: () {
     using state;
 
-    if is_suspended then return;
+    //if is_suspended then return;
 
     begin_rendering();
 
@@ -283,6 +257,7 @@ main :: () {
 
 #load "src/Animation.jai";
 #load "src/Assets.jai";
+#load "src/Camera.jai";
 #load "src/Destructible.jai";
 #load "src/Engine.jai";
 #load "src/Enemy.jai";

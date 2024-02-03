@@ -7,6 +7,8 @@ Entity :: struct {
     radius:    float;
     vibration: float;
     //position_intended: Vector2;
+
+    OFFSCREEN_DISTANCE_ADDITIONAL_DIAMETERS :: 1.0;
 }
 
 // if the two Entities collide, returns true and position of collision

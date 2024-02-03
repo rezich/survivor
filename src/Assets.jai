@@ -21,11 +21,11 @@ SPRITES :: struct
 FONTS :: struct
      { name: string;  size_denominator: int; }.[
     .{ "FLOATER"    , 48                     },
+    .{ "HUD_LARGER" , 12                     },
     .{ "HUD_LARGE"  , 16                     },
     .{ "HUD_MEDIUM" , 24                     },
     .{ "HUD_SMALL"  , 36                     },
     .{ "HUD_TINY"   , 48                     },
-    .{ "HALF_WINDOW", 2                      },
 ];
 
 

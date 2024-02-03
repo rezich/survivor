@@ -1,6 +1,3 @@
-ENEMY_SPAWN_OFFSET_RANGE :: 4;
-
-
 ENEMY_SPIDER :: Enemy.{
     sprite = .SPIDER,
     radius = 10,
@@ -59,8 +56,6 @@ Enemy :: struct {
     invulnerability_to_projectiles: Table(Projectile.ID, float);
     invulnerability: float = 0.5; // bad name; invulnerability that's conferred to player on hit
 
-    SPAWN_OFFSET_RANGE :: ENEMY_SPAWN_OFFSET_RANGE;
-
     MAXIMUM :: 10_000;
 }
 
@@ -76,13 +71,6 @@ spawn :: (enemy: Enemy, position: Vector2) -> *Enemy {
     init(*new_enemy.invulnerability_to_projectiles);
 
     return new_enemy;
-}
-spawn_somewhere_off_screen :: (enemy: Enemy) {
-    theta       := random_get_within_range(0, TAU);
-    offset      := random_get_within_range(0, Enemy.SPAWN_OFFSET_RANGE);
-    distance    := state.camera.pythagorean_distance + enemy.radius * (2.0 + offset*2);
-    from_camera := Vector2.{cos(theta), sin(theta)} * distance;
-    spawn(enemy, state.camera.position + from_camera);
 }
 spawn_around_player :: (enemy: Enemy, count: int, distance: float) {
     for 0..count-1 {

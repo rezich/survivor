@@ -34,6 +34,9 @@ render_hud :: () {
     using state;
 
     HUD_PADDING :: 8;
+    LABEL_COLOR :: Vector4.{.75,.75,.75,1};
+    hud_section_separation := window.height / 50;
+
     clock_pos: Vector2;
     {
         font := assets.fonts[Font.HUD_LARGE];
@@ -49,11 +52,11 @@ render_hud :: () {
 
     health_top: int;
     {
-        font := assets.fonts[Font.HUD_LARGE];
+        font := assets.fonts[Font.HUD_LARGER];
         health_label_width := Simp.prepare_text(font, "Health: ");
         health_pos := Vector2.{ xx HUD_PADDING, xx HUD_PADDING };
         health_top = font.character_height + xx health_pos.y;
-        draw_prepared_text_outlined(font, xx health_pos.x, xx health_pos.y, .{.9,.9,.9,1});
+        draw_prepared_text_outlined(font, xx health_pos.x, xx health_pos.y, LABEL_COLOR);
 
         health_right := health_pos.x + health_label_width;
         health_value_text := tprint("%", player.health);
@@ -68,6 +71,7 @@ render_hud :: () {
             health_right += digit_width;
         }
     }
+    health_top += hud_section_separation;
 
     experience_top: int;
     {
@@ -75,7 +79,7 @@ render_hud :: () {
         text_width := Simp.prepare_text(font, "Experience: ");
         experience_pos := Vector2.{ HUD_PADDING, xx health_top};
         experience_top = font.character_height + xx experience_pos.y;
-        draw_prepared_text_outlined(font, xx experience_pos.x, xx experience_pos.y, .{.9,.9,.9,1});
+        draw_prepared_text_outlined(font, xx experience_pos.x, xx experience_pos.y, LABEL_COLOR);
 
         experience_right := experience_pos.x + text_width;
         text_width = Simp.prepare_text(font, tprint("%/%", player.experience, player.experience_to_level_up));
@@ -89,12 +93,14 @@ render_hud :: () {
         text_width := Simp.prepare_text(font, "Level: ");
         pos := Vector2.{ HUD_PADDING, xx experience_top };
         level_top = font.character_height + xx pos.y;
-        draw_prepared_text_outlined(font, xx pos.x, xx pos.y, .{.9,.9,.9,1});
+        draw_prepared_text_outlined(font, xx pos.x, xx pos.y, LABEL_COLOR);
 
         pos.x += text_width;
         text_width = Simp.prepare_text(font, tprint("%", player.level+1));
         draw_prepared_text_outlined(font, xx pos.x, xx pos.y);
     }
+
+    level_top += hud_section_separation;
 
     gold_top: int;
     {
@@ -102,7 +108,7 @@ render_hud :: () {
         text_width := Simp.prepare_text(font, "Gold: ");
         gold_pos := Vector2.{ HUD_PADDING, xx level_top};
         gold_top = font.character_height + xx gold_pos.y;
-        draw_prepared_text_outlined(font, xx gold_pos.x, xx gold_pos.y, .{.9,.9,.9,1});
+        draw_prepared_text_outlined(font, xx gold_pos.x, xx gold_pos.y, LABEL_COLOR);
 
         gold_right := gold_pos.x + text_width;
         text_width = Simp.prepare_text(font, tprint("%", player.gold));
@@ -116,7 +122,7 @@ render_hud :: () {
         text_width := Simp.prepare_text(font, "Kills: ");
         kills_pos := Vector2.{ HUD_PADDING, xx gold_top};
         kills_top = font.character_height + xx kills_pos.y;
-        draw_prepared_text_outlined(font, xx kills_pos.x, xx kills_pos.y, .{.9,.9,.9,1});
+        draw_prepared_text_outlined(font, xx kills_pos.x, xx kills_pos.y, LABEL_COLOR);
 
         kills_right := kills_pos.x + text_width;
         text_width = Simp.prepare_text(font, tprint("%", player.kills));
