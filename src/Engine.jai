@@ -6,6 +6,7 @@ window: struct {
     pythagorean_distance: float; // this is a dumb name for this
     saved_info:           Saved_Window_Info;
     is_fullscreen:        bool;
+    scale_from_720:       float;
 }
 engine_time: Apollo_Time;
 
@@ -19,7 +20,6 @@ init_engine :: inline (window_title: string) {
     window.handle = create_window(window.width, window.height, "survivor");
     window.width, window.height = Simp.get_render_dimensions(window.handle);
     Simp.set_render_target(window.handle);
-    recalculate_window();
 
     engine_time = current_time_monotonic();
 }
@@ -38,8 +38,16 @@ end_rendering :: inline () {
     Simp.swap_buffers(window.handle);
 }
 recalculate_window :: () {
-    window.half_size = .{ xx window.width, xx window.height } * .5;
-    window.pythagorean_distance = sqrt(window.half_size.x*window.half_size.x + window.half_size.y*window.half_size.y);
+    using window;
+
+    old_width, old_height := width, height;
+    width, height = Simp.get_render_dimensions(window.handle);
+    half_size = .{ xx width, xx height } * .5;
+    pythagorean_distance = sqrt(half_size.x*half_size.x + half_size.y*half_size.y);
+
+    if width != old_width || height != old_height then load_fonts();
+
+    scale_from_720 = cast(float) height / 720.0;
 }
 handle_input :: inline () {
     is_held     :: inline (key: Input.Key_Code) -> bool         { return xx (Input.input_button_states[key] & .DOWN);       }
@@ -49,14 +57,7 @@ handle_input :: inline () {
     Input.update_window_events();
     for Input.get_window_resizes() {
         Simp.update_window(it.window);
-        if it.window == window.handle {
-            should_reload_fonts := it.width != window.width || it.height != window.height;
-            window.width = it.width;
-            window.height = it.height;
-            recalculate_window();
-
-            if should_reload_fonts then load_fonts();
-        }
+        if it.window == window.handle then recalculate_window();
     }
 
     using state;
@@ -88,12 +89,10 @@ handle_input :: inline () {
 }
 toggle_fullscreen :: () {
     using window;
+
     success := toggle_fullscreen(handle, !is_fullscreen, *saved_info);
-    if success {
-        is_fullscreen = !is_fullscreen;
-        width, height = Simp.get_render_dimensions(window.handle);
-        recalculate_window(); // not sure if needed?
-    }
+    if success then is_fullscreen = !is_fullscreen;
+    else log("FAILED TO SET FULLSCREEN FROM % TO %", is_fullscreen, !is_fullscreen);
 }
 
 

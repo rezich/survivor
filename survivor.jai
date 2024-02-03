@@ -73,7 +73,15 @@ state: struct {
 
     camera: struct {
         position: Vector2;
+        scale:    float = 1.0;
+        rotation: float;
+
         left, right, top, bottom: float;
+        matrix: Matrix3;
+        inverse_matrix: Matrix3;
+
+        half_size: Vector2;
+        pythagorean_distance: float; // this is a dumb name for this
     }
 
     hud:  Hud;
@@ -127,14 +135,15 @@ INPUT_HANDLING_CODE :: #code {
 simulate :: (dt: float) {
     using state;
 
-    // handle fullscreen toggle
-    if input.is_toggling_fullscreen then toggle_fullscreen();
-
     // skip rest of simulation if paused or suspended, otherwise update game time
     if input.is_toggling_pause then is_paused = !is_paused;
     if is_paused || is_suspended then return;
     time += dt;
 
+
+    // simulate and move player
+    simulate_player(dt);
+    move(*player, dt);
 
     // move camera
     {
@@ -142,19 +151,25 @@ simulate :: (dt: float) {
 
         position = player.position;
 
-        left   = position.x - window.half_size.x;
-        right  = position.x + window.half_size.x;
-        bottom = position.y - window.half_size.y;
-        top    = position.y + window.half_size.y;
+        scale = window.scale_from_720;
+
+        matrix = make_transform_matrix(-position, .{scale, scale}, rotation);
+        inverse_matrix = inverse(matrix);
+
+        half_size = window.half_size / window.scale_from_720;
+
+        left   = position.x - half_size.x;
+        right  = position.x + half_size.x;
+        bottom = position.y - half_size.y;
+        top    = position.y + half_size.y;
+
+        pythagorean_distance = sqrt(half_size.x*half_size.x + half_size.y*half_size.y);
     }
 
 
     // simulate stage
     simulate_stage(dt);
 
-
-    // simulate player
-    simulate_player(dt);
 
 
     // simulate weapons
@@ -173,7 +188,6 @@ simulate :: (dt: float) {
     for * enemies     move(it,      dt);
     for * projectiles move(it,      dt);
     for * pickups     move(it,      dt);
-                      move(*player, dt);
 
 
     // handle collisions
@@ -251,6 +265,8 @@ main :: () {
             simulate(dt);
             render();
 
+            if input.is_toggling_fullscreen then toggle_fullscreen();
+
             reset_temporary_storage();
             is_going_to_reinit = input.is_restarting;
         }
@@ -279,23 +295,3 @@ main :: () {
 #load "src/Stage.jai";
 #load "src/Util.jai";
 #load "src/Weapon.jai";
-
-PLAYER :: struct {
-    using #as entity:    Entity    = PLAYER_ENTITY;
-    using #as character: Character = PLAYER_CHARACTER;
-    sprite:              Sprite    = .PLAYER;
-
-    weapons:       [..] Held_Weapon;
-
-    pickup_radius: float = PLAYER_PICKUP_RADIUS;
-
-    gold:          int;
-    kills:         int;
-    experience:    int;
-    level:         int;
-
-    experience_to_level_up: int = 5;
-
-    invulnerability_to_enemies: Table(Enemy.ID, float);
-};
-

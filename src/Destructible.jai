@@ -34,7 +34,7 @@ spawn :: (destructible: Destructible, position: Vector2) -> *Destructible {
 spawn_somewhere_off_screen :: (destructible: Destructible) {
     theta       := random_get_within_range(0, TAU);
     offset      := random_get_within_range(0, Destructible.SPAWN_OFFSET_RANGE);
-    distance    := window.pythagorean_distance + destructible.radius * (2.0 + offset*2);
+    distance    := state.camera.pythagorean_distance + destructible.radius * (2.0 + offset*2);
     from_camera := Vector2.{cos(theta), sin(theta)} * distance;
     spawn(destructible, state.camera.position + from_camera);
 }

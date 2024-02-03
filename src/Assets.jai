@@ -25,6 +25,7 @@ FONTS :: struct
     .{ "HUD_MEDIUM" , 24                     },
     .{ "HUD_SMALL"  , 36                     },
     .{ "HUD_TINY"   , 48                     },
+    .{ "HALF_WINDOW", 2                      },
 ];
 
 
@@ -71,6 +72,7 @@ load_fonts :: () {
 
     for type_info(Font).names {
         font_size := window.height / FONT_SIZE_DENOMINATORS[it_index];
+        //log("loading font % (%) at size % (%/%)", it, it_index, font_size, window.height, FONT_SIZE_DENOMINATORS[it_index]);
         fonts[it_index] = Simp.get_font_at_size(".", "assets/fonts/OpenSans-BoldItalic.ttf", font_size); 
         assert(!!fonts[it_index]);
     }

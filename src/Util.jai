@@ -48,8 +48,15 @@ do_moving_circles_collide :: (a_begin: Vector2, a_end: Vector2, a_radius: float,
     return false, .{};
 }
 
-to_screen_space :: (position) => position - state.camera.position + window.half_size;
-to_world_space  :: (position) => position + state.camera.position - window.half_size;
+//to_screen_space :: (position) => position - state.camera.position + window.half_size;
+//to_world_space  :: (position) => position + state.camera.position - window.half_size;
+
+to_screen_space :: (position: Vector2) -> Vector2 {
+    return transform(state.camera.matrix, position) + window.half_size;
+}
+to_world_space :: (position: Vector2) -> Vector2 {
+    return transform(state.camera.inverse_matrix, position - window.half_size);
+}
 
 lerp_theta :: (a: float, b: float, t: float) -> float {
     t2 := b-a;
@@ -82,3 +89,25 @@ format_time :: (time: float) -> string {
     deciseconds := cast(int) ((time - xx total_seconds) * 100.00);
     return tprint("%:%.%", formatInt(minutes, minimum_digits=2), formatInt(seconds, minimum_digits=2), formatInt(deciseconds, minimum_digits=2));
 }
+
+make_transform_matrix :: (translation: Vector2, scale: Vector2, rotation: float) -> Matrix3 {
+    m: Matrix3 = ---;
+    identity(*m);
+
+    cos_rotation := cos(rotation);
+    sin_rotation := sin(rotation);
+
+    m._11 =  scale.x * cos_rotation;
+    m._12 = -scale.y * sin_rotation;
+    m._13 =  translation.x * scale.x;
+    m._21 =  scale.x * sin_rotation;
+    m._22 =  scale.y * cos_rotation;
+    m._23 =  translation.y * scale.y;
+
+    return m;
+}
+
+transform :: (m: Matrix3, v: Vector2) -> Vector2 { return .{
+    m._11 * v.x + m._12 * v.y + m._13,
+    m._21 * v.x + m._22 * v.y + m._23
+}; }

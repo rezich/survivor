@@ -42,9 +42,8 @@ render :: (using,except(entity) entity: $T/interface Entity_With_Sprite) {
         vibration_vector = .{ cos(theta) * amount, sin(theta) * amount };
     }
 
-    pos := to_screen_space(position + vibration_vector);
-    p0 := pos - Vector2.{radius, radius};
-    p1 := pos + Vector2.{radius, radius};
+    p0 := to_screen_space(position + vibration_vector - Vector2.{radius, radius});
+    p1 := to_screen_space(position + vibration_vector + Vector2.{radius, radius});
 
     color := SPRITE_COLORS[sprite];
 

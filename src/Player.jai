@@ -1,9 +1,9 @@
 PLAYER_PICKUP_RADIUS        :: 40;
 
 PLAYER_INITIAL_WEAPONS      :: Held_Weapon.[
-    .{ weapon = WEAPON_SPREADSHOT },
+    //.{ weapon = WEAPON_SPREADSHOT },
     .{ weapon = WEAPON_PULSE },
-    .{ weapon = WEAPON_STAFF },
+    //.{ weapon = WEAPON_STAFF },
 ];
 
 

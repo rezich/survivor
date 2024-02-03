@@ -80,7 +80,7 @@ spawn :: (enemy: Enemy, position: Vector2) -> *Enemy {
 spawn_somewhere_off_screen :: (enemy: Enemy) {
     theta       := random_get_within_range(0, TAU);
     offset      := random_get_within_range(0, Enemy.SPAWN_OFFSET_RANGE);
-    distance    := window.pythagorean_distance + enemy.radius * (2.0 + offset*2);
+    distance    := state.camera.pythagorean_distance + enemy.radius * (2.0 + offset*2);
     from_camera := Vector2.{cos(theta), sin(theta)} * distance;
     spawn(enemy, state.camera.position + from_camera);
 }
