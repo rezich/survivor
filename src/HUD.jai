@@ -16,7 +16,7 @@ simulate_hud :: (dt: float) {
 
         if ratio > 0.5  then return ease_color(YELLOW, WHITE , (ratio - 0.5) * 2.0);
         if ratio > 0.25 then return ease_color(RED   , YELLOW,  ratio        * 2.0);
-                            return ease_color(MAROON, RED   ,  ratio        * 4.0);
+                             return ease_color(MAROON, RED   ,  ratio        * 4.0);
     }
 
     using state; using state.hud;

@@ -1,9 +1,9 @@
 PLAYER_PICKUP_RADIUS        :: 40;
 
-PLAYER_INITIAL_WEAPONS      :: Held_Weapon.[
-    .{ weapon = WEAPON_SPREADSHOT },
-    .{ weapon = WEAPON_PULSE },
-    .{ weapon = WEAPON_STAFF },
+PLAYER_INITIAL_WEAPONS      :: Weapon.[
+    WEAPON_SPREADSHOT,
+    WEAPON_PULSE,
+    WEAPON_STAFF,
 ];
 
 
@@ -24,7 +24,7 @@ Player :: struct {
     using #as character: Character = PLAYER_CHARACTER;
     sprite:              Sprite    = .PLAYER;
 
-    weapons:       [..] Held_Weapon;
+    weapons:       [..] Weapon;
 
     pickup_radius: float = PLAYER_PICKUP_RADIUS;
 
@@ -106,5 +106,6 @@ get_experience_required_to_level_up_player :: () -> int {
 level_up_player :: () {
     using state.player;
     level += 1;
+    upgrade_random_weapon_if_possible();
     experience_to_level_up = get_experience_required_to_level_up_player();
 }

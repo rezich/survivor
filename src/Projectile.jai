@@ -1,24 +1,3 @@
-PROJECTILE_BULLET :: Projectile.{
-    sprite = .BULLET,
-    radius = 4,
-    damage = 10,
-    speed  = 200,
-    growth = 2,
-    flags  = .IS_FIRE
-};
-PROJECTILE_PULSE :: Projectile.{
-    sprite = .PULSE_WAVE,
-    radius = 32,
-    damage = 1,
-    speed  = 0,
-    growth = 64,
-    life   = 0.5,
-    flags  = .FOLLOWS_PLAYER | .NOT_DESTROYED_UPON_COLLISION
-};
-
-
-
-
 Projectile :: struct {
     using #as entity: Entity;
     sprite:           Sprite;
@@ -27,14 +6,19 @@ Projectile :: struct {
     speed:            float;
     growth:           float;
     life:             float = FLOAT32_INFINITY;
-    flags:            enum_flags { FOLLOWS_PLAYER; NOT_DESTROYED_UPON_COLLISION; IS_FIRE; };
+    flags:            enum_flags {
+        FOLLOWS_PLAYER;
+        NOT_DESTROYED_UPON_COLLISION;
+        IS_FIRE;
+        ONLY_ONE_PROJECTILE;
+    };
 
     invulnerability:  float = 0.5; // bad name; invulnerability that's conferred to enemy on hit
 
     MAXIMUM :: 10_000;
 }
 
-spawn :: (projectile: Projectile, position: Vector2, direction: Vector2) -> *Projectile {
+spawn :: (projectile: Projectile, weapon: Weapon, position: Vector2, direction: Vector2) -> *Projectile {
     using state;
 
     new_projectile := spawn(*projectiles, projectile);
@@ -43,6 +27,9 @@ spawn :: (projectile: Projectile, position: Vector2, direction: Vector2) -> *Pro
     
     new_projectile.position = position;
     new_projectile.velocity = direction * new_projectile.speed;
+    new_projectile.damage   = weapon.shot_damage;
+    new_projectile.radius  += weapon.shot_radius;
+    new_projectile.growth  += weapon.shot_growth;
 
     return new_projectile;
 }
