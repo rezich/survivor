@@ -99,7 +99,7 @@ toggle_fullscreen :: () {
 
 
 // hide console in release builds
-#if BUILD != .DEBUG then #run #if OS == .WINDOWS {
+#if BUILD != .DEBUG && OS == .WINDOWS {
     WR :: #import "Windows_Resources";
     WR.disable_runtime_console();
 }

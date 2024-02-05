@@ -232,11 +232,20 @@ main :: () {
 
         using state;
 
-        while !is_exiting && !is_going_to_reinit {
-            dt := advance_time();
+        accumulator: float = 0;
+        DT_FIXED       :: 1.0 / 60.0;
+        DT_FIXED_LIMIT :: 1.0 / 62.0;
 
-            handle_input();
-            simulate(dt);
+        while !is_exiting && !is_going_to_reinit {
+            
+            accumulator += advance_time();
+            while accumulator > DT_FIXED_LIMIT {
+                handle_input();
+                simulate(DT_FIXED);
+                accumulator -= DT_FIXED;
+                if accumulator < 0 then accumulator = 0;
+            }
+
             render();
 
             if input.is_toggling_fullscreen then toggle_fullscreen();
