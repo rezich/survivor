@@ -1,5 +1,6 @@
-BUILD : enum { DEBUG; RELEASE; } : .DEBUG;
-FRAME_CONTROLLER : enum { VERY_NAIVE; LESS_NAIVE; } : .VERY_NAIVE;
+BUILD : enum { DEBUG; RELEASE; } : .RELEASE;
+
+FRAME_CONTROLLER : enum { VERY_NAIVE; LESS_NAIVE; } : .LESS_NAIVE;
 
 
 
@@ -195,7 +196,7 @@ render :: () {
 
     //if is_suspended then return;
 
-    begin_rendering();
+    begin_rendering_world();
 
     { using stage.background; Simp.clear_render_target(x, y, z, w); }
 
@@ -206,9 +207,12 @@ render :: () {
     for projectiles   render(it);
     for floaters      render(it);
 
-    render_hud();
+    end_rendering_world();
 
-    end_rendering();
+
+    begin_rendering_ui();
+    render_hud();
+    end_rendering_ui();
 }
 
 
@@ -221,6 +225,7 @@ on_reload_fonts :: () {
     y := font.character_height;
     floater_texture_size = .{ x, y, .{ x/2.0, y/2.0 } };
 }
+
 
 
 
@@ -254,6 +259,7 @@ main :: () {
                 while accumulator > DT_FIXED_LIMIT {
                     handle_input();
                     simulate(.{ scaled=DT_FIXED*time_scale, actual=DT_FIXED });
+
                     accumulator -= DT_FIXED;
                     if accumulator < 0 then accumulator = 0;
                 }
@@ -261,8 +267,10 @@ main :: () {
             }
 
             render();
+            display();
 
             if input.is_toggling_fullscreen then toggle_fullscreen();
+            input.is_toggling_fullscreen = false; // not quite sure why this is needed for .LESS_NAIVE...
 
             reset_temporary_storage();
             is_going_to_reinit = input.is_restarting;
@@ -290,6 +298,7 @@ main :: () {
 #load "src/Pickup.jai";
 #load "src/Player.jai";
 #load "src/Projectile.jai";
+#load "src/Shader.jai";
 #load "src/Stage.jai";
 #load "src/Util.jai";
 #load "src/Weapon.jai";

@@ -1,5 +1,16 @@
 Dt :: struct { scaled, actual: float; }
 
+#placeholder Full_Screen_Render_Target;
+#insert -> string {
+    builder: String_Builder;
+    append(*builder, "Full_Screen_Render_Target :: enum {\n");
+    append(*builder, "    OUTPUT;\n");
+    append(*builder, "    UI;\n");
+    for type_info(Full_Screen_Effect).names print(*builder, "    %;\n" , it);
+    append(*builder, "}\n");
+    return builder_to_string(*builder);
+}
+
 window: struct {
     handle:               Window_Type;
     width:                int = 1280;
@@ -9,6 +20,9 @@ window: struct {
     saved_info:           Saved_Window_Info;
     is_fullscreen:        bool;
     scale_from_720:       float;
+
+    full_screen_render_targets: [#run type_info(Full_Screen_Render_Target).values.count] *Simp.Texture;
+    full_screen_render_targets_initted := false;
 }
 engine_time: Apollo_Time;
 
@@ -21,7 +35,10 @@ init_engine :: inline (window_title: string) {
 
     window.handle = create_window(window.width, window.height, "survivor");
     window.width, window.height = Simp.get_render_dimensions(window.handle);
+    
     Simp.set_render_target(window.handle);
+
+    init_full_screen_effects();
 
     engine_time = current_time_monotonic();
 }
@@ -31,14 +48,45 @@ advance_time :: inline () -> float {
     engine_time = current_time_monotonic();
     return cast(float) to_float64_seconds(engine_time - prev_time);
 }
-begin_rendering :: inline () {
+begin_rendering_world :: inline () {
+    if !window.full_screen_render_targets_initted then init_full_screen_render_targets();
+    Simp.set_render_target(window.full_screen_render_targets[Full_Screen_Render_Target.OUTPUT]);
     Simp.set_shader_for_color(enable_blend = true);
     Simp.immediate_begin();
 }
-end_rendering :: inline () {
+end_rendering_world :: inline () {
+    Simp.immediate_flush();
+}
+begin_rendering_ui :: inline () {
+    Simp.set_render_target(window.full_screen_render_targets[Full_Screen_Render_Target.UI]);
+    clear_render_target();
+    Simp.set_shader_for_color(enable_blend = true);
+}
+end_rendering_ui :: inline () {
+    Simp.immediate_flush();
+}
+display :: inline () {
+    render_full_screen_effects();
+
+    Simp.set_render_target(window.handle);
+    Simp.set_shader_for_images(window.full_screen_render_targets[Full_Screen_Render_Target.OUTPUT]);
+    render_immediate_full_screen_quad();
+
+    render_full_screen_effects_to_render_target();
+
+    Simp.set_shader_for_images(window.full_screen_render_targets[#run type_info(Full_Screen_Render_Target).values.count-1]);
+    render_immediate_full_screen_quad();
+
+    Simp.set_shader_for_images(window.full_screen_render_targets[Full_Screen_Render_Target.UI]);
+    render_immediate_full_screen_quad();
+
     Simp.immediate_flush();
     Simp.swap_buffers(window.handle);
 }
+render_immediate_full_screen_quad :: inline (color: Vector4 = .{1,1,1,1}) {
+    Simp.immediate_quad(0, 0, xx window.width, xx window.height, color);
+}
+clear_render_target :: () { Simp.clear_render_target(0,0,0,0); }
 recalculate_window :: () {
     using window;
 
@@ -47,9 +95,29 @@ recalculate_window :: () {
     half_size = .{ xx width, xx height } * .5;
     pythagorean_distance = sqrt(half_size.x*half_size.x + half_size.y*half_size.y);
 
-    if width != old_width || height != old_height then load_fonts();
+    if width != old_width || height != old_height {
+        init_full_screen_render_targets();
+        load_fonts();
+    }
 
     scale_from_720 = cast(float) height / 720.0;
+}
+init_full_screen_render_targets :: () {
+    using window;
+    for * full_screen_render_targets {
+        if it.* {
+            Simp.deinit(it.*);
+            free(it.*);
+        }
+        it.* = Simp.texture_create_render_target(xx window.width, xx window.height, .RGBA8);
+    }
+    full_screen_render_targets_initted = true;
+}
+set_fullscreen_render_target :: (index: Full_Screen_Render_Target) {
+    Simp.set_render_target(window.full_screen_render_targets[index]);
+}
+reset_render_target :: () {
+    set_fullscreen_render_target(Full_Screen_Render_Target.OUTPUT);
 }
 handle_input :: inline () {
     is_held     :: inline (key: Input.Key_Code) -> bool         { return xx (Input.input_button_states[key] & .DOWN);       }
@@ -101,7 +169,7 @@ toggle_fullscreen :: () {
 
 
 // hide console in release builds
-#if BUILD != .DEBUG && OS == .WINDOWS {
+#if BUILD != .DEBUG && OS == .WINDOWS then #run {
     WR :: #import "Windows_Resources";
     WR.disable_runtime_console();
 }

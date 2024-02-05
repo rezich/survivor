@@ -1,7 +1,7 @@
 Hud :: struct {
     health_shake_amount:        float;
-    health_value_color:         Vector4;
-    health_value_outline_color: Vector4;
+    health_value_color:         Vector4 = .{1,1,1,1};
+    health_value_outline_color: Vector4 = .{0,0,0,1};
     most_recent_health_change:  enum { HURT; HEAL; }
 }
 

@@ -133,7 +133,7 @@ make_floater_texture :: (using floater: *Floater) {
     text_pos := Vector2.{ floater_texture_size.x/2.0 - text_width/2.0, floater_texture_size.y/2.0 - font.character_height/2.0};
     draw_prepared_text_outlined(font, xx text_pos.x, xx text_pos.y, color, outline);
 
-    Simp.set_render_target(window.handle);
+    reset_render_target();
 }
 render :: (using floater: Floater) {
     if !is_on_screen(floater) then return;
@@ -147,7 +147,10 @@ render :: (using floater: Floater) {
     Simp.immediate_quad(p0.x, p0.y, p1.x, p1.y, .{1,1,1, opacity});
 }
 
-free_texture        :: inline (using floater: *Floater) { free(texture); }
+free_texture        :: inline (using floater: *Floater) {
+    Simp.deinit(texture);
+    free(texture);
+}
 free_text_if_needed :: inline (using floater: *Floater) { if !text_is_constant then free(text.data); }
 reset_floaters :: () { for * state.floaters { free_texture(it); free_text_if_needed(it); } }
 
