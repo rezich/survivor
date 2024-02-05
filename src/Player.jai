@@ -1,9 +1,9 @@
 PLAYER_PICKUP_RADIUS        :: 40;
 
 PLAYER_INITIAL_WEAPONS      :: Weapon.[
-    WEAPON_SPREADSHOT,
-    WEAPON_PULSE,
-    WEAPON_STAFF,
+    //WEAPON_SPREADSHOT,
+    //WEAPON_PULSE,
+    //WEAPON_STAFF,
 ];
 
 
@@ -36,6 +36,14 @@ Player :: struct {
     experience_to_level_up: int = 5;
 
     invulnerability_to_enemies: Table(Enemy.ID, float);
+
+    hit_effect: float;
+    HIT_EFFECT_TIME_SCALE            :: 0.5;
+    HIT_EFFECT_TIME_SCALE_DOWN_SPEED :: 60.0;
+    HIT_EFFECT_TIME_SCALE_UP\ _SPEED :: 60.0;
+    HIT_EFFECT_ZOOM                  :: 1.08;
+    HIT_EFFECT_ZOOM_IN\_SPEED        :: 10.0;
+    HIT_EFFECT_ZOOM_OUT_SPEED        :: 30.0;
 }
 
 hurt_player :: (enemy_id: Enemy.ID, damage: int, invulnerability: float) {
@@ -51,6 +59,8 @@ hurt_player :: (enemy_id: Enemy.ID, damage: int, invulnerability: float) {
     Clamp(*hud.health_shake_amount, 10.0, 50.0);
 
     spawn(FLOATER_PLAYER_DAMAGE, player.position, damage);
+
+    player.hit_effect = invulnerability;
 }
 heal_player :: (health: int) {
     using state;
@@ -64,8 +74,17 @@ heal_player :: (health: int) {
 
     spawn(FLOATER_PLAYER_HEAL, player.position, player.health - previous_health);
 }
-simulate_player :: (dt: float) {
+simulate_player :: (dt: Dt) {
     using state;
+
+    if player.hit_effect > 0 {
+        time_scale = ease(time_scale, Player.HIT_EFFECT_TIME_SCALE, Player.HIT_EFFECT_TIME_SCALE_DOWN_SPEED * dt.actual);
+        player.hit_effect = max(player.hit_effect - dt.actual, 0);
+        camera.scale = ease(camera.scale, Player.HIT_EFFECT_ZOOM, Player.HIT_EFFECT_ZOOM_IN_SPEED * dt.actual);
+    } else {
+        time_scale = ease(time_scale, 1.0, Player.HIT_EFFECT_TIME_SCALE_UP_SPEED * dt.actual);
+        camera.scale = ease(camera.scale, 1.0, Player.HIT_EFFECT_ZOOM_OUT_SPEED * dt.actual);
+    }
 
     if player.experience >= player.experience_to_level_up then level_up_player();
 
@@ -76,7 +95,7 @@ simulate_player :: (dt: float) {
     } else player.velocity = .{};
 
     for * player.invulnerability_to_enemies {
-        it.* -= dt;
+        it.* -= dt.scaled;
         if it.* <= 0 then remove it;
     }
 

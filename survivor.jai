@@ -1,4 +1,5 @@
 BUILD : enum { DEBUG; RELEASE; } : .DEBUG;
+FRAME_CONTROLLER : enum { VERY_NAIVE; LESS_NAIVE; } : .VERY_NAIVE;
 
 
 
@@ -76,6 +77,7 @@ state: struct {
     hud:  Hud;
 
     time: float;
+    time_scale: float = 1.0;
 
     is_paused:    bool;
     is_suspended: bool;
@@ -121,7 +123,7 @@ INPUT_HANDLING_CODE :: #code {
 
 
 
-simulate :: (dt: float) {
+simulate :: (dt: Dt) {
     using state;
 
     // skip rest of simulation if paused or suspended, otherwise update game time
@@ -129,11 +131,11 @@ simulate :: (dt: float) {
     if is_suspended then return;
 
     if !is_paused {
-        time += dt;
+        time += dt.scaled;
 
         // simulate and move player
         simulate_player(dt);
-        move(*player, dt);
+        move(*player, dt.scaled);
     }
 
     // move camera
@@ -143,7 +145,7 @@ simulate :: (dt: float) {
 
 
     // simulate stage
-    simulate_stage(dt);
+    simulate_stage(dt.scaled);
 
 
 
@@ -152,16 +154,16 @@ simulate :: (dt: float) {
 
 
     // simulate entities
-    simulate_enemy\      _behavior(dt);
-    simulate_pickup\     _behavior(dt);
-    simulate_floater\    _behavior(dt);
-    simulate_projectile\ _behavior(dt);
+    simulate_enemy\      _behavior(dt.scaled);
+    simulate_pickup\     _behavior(dt.scaled);
+    simulate_floater\    _behavior(dt.scaled);
+    simulate_projectile\ _behavior(dt.scaled);
 
 
     // move entities
-    for * enemies     move(it,      dt);
-    for * projectiles move(it,      dt);
-    for * pickups     move(it,      dt);
+    for * enemies     move(it,      dt.scaled);
+    for * projectiles move(it,      dt.scaled);
+    for * pickups     move(it,      dt.scaled);
 
 
     // handle collisions
@@ -171,7 +173,7 @@ simulate :: (dt: float) {
 
 
     // simulate HUD
-    simulate_hud(dt);
+    simulate_hud(dt.actual);
 
 
     // restart the game if the player dies
@@ -232,18 +234,30 @@ main :: () {
 
         using state;
 
-        accumulator: float = 0;
-        DT_FIXED       :: 1.0 / 60.0;
-        DT_FIXED_LIMIT :: 1.0 / 62.0;
+        #if FRAME_CONTROLLER != .VERY_NAIVE {
+            accumulator: float = 0;
+            DT_FIXED       :: 1.0 / 60.0;
+            DT_FIXED_LIMIT :: 1.0 / 62.0;
+        }
 
         while !is_exiting && !is_going_to_reinit {
             
-            accumulator += advance_time();
-            while accumulator > DT_FIXED_LIMIT {
+            #if FRAME_CONTROLLER == {
+
+            case .VERY_NAIVE;
+                dt_actual := advance_time();
                 handle_input();
-                simulate(DT_FIXED);
-                accumulator -= DT_FIXED;
-                if accumulator < 0 then accumulator = 0;
+                simulate(.{ scaled=dt_actual*time_scale, actual=dt_actual });
+            
+            case .LESS_NAIVE;
+                accumulator += advance_time();
+                while accumulator > DT_FIXED_LIMIT {
+                    handle_input();
+                    simulate(.{ scaled=DT_FIXED*time_scale, actual=DT_FIXED });
+                    accumulator -= DT_FIXED;
+                    if accumulator < 0 then accumulator = 0;
+                }
+    
             }
 
             render();

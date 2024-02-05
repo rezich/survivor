@@ -1,3 +1,5 @@
+Dt :: struct { scaled, actual: float; }
+
 window: struct {
     handle:               Window_Type;
     width:                int = 1280;
