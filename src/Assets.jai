@@ -36,19 +36,17 @@ FONTS :: struct
 #placeholder SPRITE_COLORS;
 #placeholder FONT_SIZE_DENOMINATORS;
 
-Font_Size_Proc :: #type () -> int;
-
 #insert -> string {
     builder: String_Builder;
-    append(*builder, "Sprite :: enum {\n")               ; for SPRITES print_to_builder(*builder, "    %;\n" , it.name);             append(*builder, "}\n");
-    append(*builder, "SPRITE_COLORS :: Vector4.[\n")     ; for SPRITES print_to_builder(*builder, "    .%,\n", it.color);            append(*builder, "];\n");
-    append(*builder, "Font :: enum {\n")                 ; for FONTS   print_to_builder(*builder, "    %;\n" , it.name);             append(*builder, "}\n");
-    append(*builder, "FONT_SIZE_DENOMINATORS :: int.[\n"); for FONTS   print_to_builder(*builder, "    %,\n" , it.size_denominator); append(*builder, "];\n");
+    append(*builder, "Sprite :: enum {\n")               ; for SPRITES print(*builder, "    %;\n" , it.name);             append(*builder, "}\n");
+    append(*builder, "SPRITE_COLORS :: Vector4.[\n")     ; for SPRITES print(*builder, "    .%,\n", it.color);            append(*builder, "];\n");
+    append(*builder, "Font :: enum {\n")                 ; for FONTS   print(*builder, "    %;\n" , it.name);             append(*builder, "}\n");
+    append(*builder, "FONT_SIZE_DENOMINATORS :: int.[\n"); for FONTS   print(*builder, "    %,\n" , it.size_denominator); append(*builder, "];\n");
     return builder_to_string(*builder);
 }
 assets: struct {
     textures: [#run type_info(Sprite).values.count] Simp.Texture;
-    fonts:    [#run type_info(Font).values.count]   *Simp.Dynamic_Font;
+    fonts:    [#run type_info(Font  ).values.count] *Simp.Dynamic_Font;
 
     //animations: 
     working_directory_set: bool;

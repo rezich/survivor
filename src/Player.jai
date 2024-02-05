@@ -80,7 +80,7 @@ simulate_player :: (dt: float) {
         if it.* <= 0 then remove it;
     }
 
-    if input.is_hurting_player    then hurt_player(U64_MAX, xx (random_get() % 30), 0);
+    if input.is_hurting_player    then hurt_player(U64_MAX, xx (random_get() % 4) + 1, 0);
     if input.is_spawning_chicken  then spawn(PICKUP_CHICKEN, player.position + .{100,0});
 }
 get_experience_required_to_level_up_player :: () -> int {

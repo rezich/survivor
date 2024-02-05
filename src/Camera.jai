@@ -35,9 +35,9 @@ move_camera :: () {
 
     position = player.position;
 
-    scale = window.scale_from_720;
+    final_scale = scale * window.scale_from_720;
 
-    matrix_to_screen_space = make_camera_matrix(-position, .{scale, scale}, rotation);
+    matrix_to_screen_space = make_camera_matrix(-position, .{final_scale, final_scale}, rotation);
     matrix_to_world\_space = inverse(matrix_to_screen_space);
 
     half_size = window.half_size / window.scale_from_720;

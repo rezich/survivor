@@ -2,13 +2,13 @@ BUILD : enum { DEBUG; RELEASE; } : .DEBUG;
 
 
 
+
 /*
 
 TODO:
   - massively clean up HUD text rendering
   - weapon acquisition/upgrade system
   - add the rest of the HUD
-  - add camera zoom, and set default zoom automatically based on window size
   - add a decent, reasonably competent framerate controller
   - figure out how to do collision sweeps for projectiles, player, enemies
   - add terrain

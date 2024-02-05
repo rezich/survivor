@@ -7,16 +7,16 @@ Hud :: struct {
 
 simulate_hud :: (dt: float) {
     get_health_color :: (health: int, max_health: int) -> Vector4 {
-        WHITE  :: Vector4.{ 1, 1, 1,1};
-        YELLOW :: Vector4.{ 1, 1, 0,1};
-        RED    :: Vector4.{ 1, 0, 0,1};
-        MAROON :: Vector4.{.5, 0, 0,1};
+        WHITE  :: Vector4.{  1, 1, 1,1};
+        YELLOW :: Vector4.{  1, 1, 0,1};
+        RED    :: Vector4.{  1, 0, 0,1};
+        MAROON :: Vector4.{.25, 0, 0,1};
 
         ratio := cast(float) health / cast(float) max_health;
 
-        if ratio > 0.5  then return ease_color(YELLOW, WHITE , (ratio - 0.5) * 2.0);
-        if ratio > 0.25 then return ease_color(RED   , YELLOW,  ratio        * 2.0);
-                             return ease_color(MAROON, RED   ,  ratio        * 4.0);
+        if ratio > 0.5  then return ease_color(YELLOW, WHITE , (ratio - 0.5)  * 2.0);
+        if ratio > 0.25 then return ease_color(RED   , YELLOW, (ratio - 0.25) * 4.0);
+                             return ease_color(MAROON, RED   ,  ratio         * 4.0);
     }
 
     using state; using state.hud;
