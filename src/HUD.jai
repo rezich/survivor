@@ -1,10 +1,12 @@
 Hud :: struct {
     health_shake_amount:        float;
+    health_shake_digit_offsets: [HEALTH_MAX_LENGTH] Vector2;
     health_value_color:         Vector4 = .{1,1,1,1};
     health_value_outline_color: Vector4 = .{0,0,0,1};
     most_recent_health_change:  enum { HURT; HEAL; }
 
     HEALTH_SHAKE_TAPER :: 7.0;
+    HEALTH_MAX_LENGTH  :: 4;
 }
 
 simulate_hud :: (dt: float) {
@@ -31,6 +33,11 @@ simulate_hud :: (dt: float) {
 
     health_value_color = ease_color(health_value_color, ifx health_value_color_is_flashing then ifx most_recent_health_change == .HURT then Vector4.{1,0,0,1} else Vector4.{0,1,0,1} else get_health_color(player.health, player.health_max), health_value_color_speed * dt);
     health_value_outline_color = ease_color(health_value_outline_color, ifx health_value_color_is_flashing then Vector4.{1,1,1,1} else .{0,0,0,1}, health_value_color_speed * dt);
+
+    for 0..HEALTH_MAX_LENGTH-1 {
+        shake := hud.health_shake_amount * .5;
+        health_shake_digit_offsets[it] = .{ random_get_within_range(-shake, shake), random_get_within_range(-shake, shake) };
+    }
 }
 render_hud :: () {
     using state;
@@ -62,12 +69,12 @@ render_hud :: () {
 
         health_right := health_pos.x + health_label_width;
         health_value_text := tprint("%", player.health);
+        assert(health_value_text.count <= hud.HEALTH_MAX_LENGTH);
 
         for 0..health_value_text.count-1 {
             digit := string.{ 1, health_value_text.data + it };
             digit_width := Simp.prepare_text(font, digit);
-            shake := hud.health_shake_amount * .5;
-            digit_pos := Vector2.{ health_right, health_pos.y } + .{ random_get_within_range(-shake, shake), random_get_within_range(-shake, shake) };
+            digit_pos := Vector2.{ health_right, health_pos.y } + hud.health_shake_digit_offsets[it];
             draw_prepared_text_outlined(font, xx digit_pos.x, xx digit_pos.y, hud.health_value_color, hud.health_value_outline_color);
 
             health_right += digit_width;
