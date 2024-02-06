@@ -3,6 +3,8 @@ Hud :: struct {
     health_value_color:         Vector4 = .{1,1,1,1};
     health_value_outline_color: Vector4 = .{0,0,0,1};
     most_recent_health_change:  enum { HURT; HEAL; }
+
+    HEALTH_SHAKE_TAPER :: 7.0;
 }
 
 simulate_hud :: (dt: float) {
@@ -21,7 +23,7 @@ simulate_hud :: (dt: float) {
 
     using state; using state.hud;
 
-    health_shake_amount = ifx is_approximately_zero(health_shake_amount, 1) then 0 else ease(health_shake_amount, 0, 10.0 * dt);
+    health_shake_amount = ifx is_approximately_zero(health_shake_amount, 1) then 0 else ease(health_shake_amount, 0, Hud.HEALTH_SHAKE_TAPER * dt);
 
     health_value_color_is_flashing := health_shake_amount >= 5.0;
 

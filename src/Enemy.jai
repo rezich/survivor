@@ -39,7 +39,7 @@ ENEMY_SKELETON :: Enemy.{
     radius = 12,
     speed  = 30,
     health = 10,
-    damage = 5
+    damage = 3
 };
 
 
@@ -54,7 +54,7 @@ Enemy :: struct {
     flags:  enum_flags { IMMUNE_TO_FIRE; }
 
     invulnerability_to_projectiles: Table(Projectile.ID, float);
-    invulnerability: float = 0.5; // bad name; invulnerability that's conferred to player on hit
+    invulnerability: float = 0.33; // bad name; invulnerability that's conferred to player on hit
 
     MAXIMUM :: 10_000;
 }

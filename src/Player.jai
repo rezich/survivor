@@ -38,13 +38,13 @@ Player :: struct {
     invulnerability_to_enemies: Table(Enemy.ID, float);
 
     hit_effect: float;
-    HIT_EFFECT_INVULNERABILITY_SCALE :: 2.0;
+    //HIT_EFFECT_INVULNERABILITY_SCALE :: 4.0;
     HIT_EFFECT_TIME_SCALE            :: 0.25;
     HIT_EFFECT_TIME_SCALE_DOWN_SPEED :: 30.0;
     HIT_EFFECT_TIME_SCALE_UP\ _SPEED :: 30.0;
-    HIT_EFFECT_ZOOM                  :: 1.25;
-    HIT_EFFECT_ZOOM_IN\_SPEED        :: 10.0;
-    HIT_EFFECT_ZOOM_OUT_SPEED        :: 7.5;
+    HIT_EFFECT_ZOOM                  :: 1.75;
+    HIT_EFFECT_ZOOM_IN\_SPEED        :: 6.0;
+    HIT_EFFECT_ZOOM_OUT_SPEED        :: 7.0;
     HIT_EFFECT_VIGNETTE_SCALE        :: 0.5;
 }
 
@@ -64,7 +64,8 @@ hurt_player :: (enemy_id: Enemy.ID, damage: int, invulnerability: float) {
 
     spawn(FLOATER_PLAYER_DAMAGE, player.position, damage);
 
-    player.hit_effect = invulnerability * Player.HIT_EFFECT_INVULNERABILITY_SCALE;
+    //player.hit_effect = invulnerability * Player.HIT_EFFECT_INVULNERABILITY_SCALE;
+    player.hit_effect = 2.0;
 }
 heal_player :: (health: int) {
     using state;
@@ -103,7 +104,7 @@ simulate_player :: (dt: Dt) {
         if it.* <= 0 then remove it;
     }
 
-    if input.is_hurting_player    then hurt_player(U64_MAX, xx (random_get() % 5) + 5, 1.0);
+    if input.is_hurting_player    then hurt_player(U64_MAX, xx (random_get() % 5) + 5, 0.25);
     if input.is_spawning_chicken  then spawn(PICKUP_CHICKEN, player.position + .{100,0});
 }
 get_experience_required_to_level_up_player :: () -> int {
